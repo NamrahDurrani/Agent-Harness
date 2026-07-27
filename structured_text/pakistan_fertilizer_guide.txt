@@ -1,0 +1,57 @@
+FERTILIZER RECOMMENDATIONS FOR PAKISTAN — All Major Crops
+Source: NFDC (National Fertilizer Development Centre), Punjab Agriculture Dept
+
+FERTILIZER CONSUMPTION IN PAKISTAN
+- Total NPK use: ~4.5 million nutrient tons/year
+- Nitrogen: 3.2 million tons (Urea = 80% of N source)
+- Phosphate: 0.9 million tons (DAP = dominant)
+- Potash: 0.15 million tons (severely underused vs needed)
+- Pakistan NPK ratio: 4.8 : 1.3 : 0.2 (recommended = 2:1:0.5)
+- Potassium use is only 4% of recommended — biggest nutrient imbalance
+
+FERTILIZER TYPES AVAILABLE IN PAKISTAN
+Type            | Formula    | N  | P2O5 | K2O | Notes
+Urea            | CO(NH2)2   | 46 | -    | -   | Most common N source; volatilization loss if broadcast
+DAP             | NH4H2PO4   | 18 | 46   | -   | Most popular starter fertilizer
+SSP             | Ca(H2PO4)2 | -  | 16   | -   | Also supplies Sulphur (11%) + Calcium; good for rice
+CAN (Calcium    | -          | 26 | -    | -   | Less burning than urea; good for vegetables
+Ammonium Nitrate)
+SOP (Sulphate   | K2SO4      | -  | -    | 50  | Premium K source; contains S (17%); for Cl-sensitive crops
+of Potash)
+MOP (Muriate    | KCl        | -  | -    | 60  | Cheapest K source; avoid for potato, tobacco, citrus
+of Potash)
+ZnSO4           | -          | -  | -    | -   | Zinc sulphate 33% Zn — critical micronutrient
+
+CROP-WISE FERTILIZER RECOMMENDATIONS (per acre, Punjab)
+Crop          | N (kg) | P2O5 (kg) | K2O (kg) | Zn | Notes
+Wheat         | 75     | 35        | 25       | 5  | Split N 50%+50%; top-dress 1st irrigation
+Cotton        | 75     | 25        | 25       | -  | Add Boron 1 kg; split N 4 times
+Rice (Basmati)| 70     | 25        | 25       | 5  | Split N 3 times; do NOT over-apply N (spikelet sterility)
+Rice (IRRI)   | 100    | 35        | 30       | 5  | Higher N demand vs Basmati
+Maize         | 100    | 45        | 30       | 5  | Most N-demanding crop; apply 30% at sowing, rest split
+Sugarcane     | 150    | 60        | 60       | -  | Ratoon crop needs 80% of plant crop dose
+Potato        | 100    | 60        | 80       | 5  | K critical for tuber quality; split N 3 times
+Sunflower     | 50     | 35        | 25       | -  | Add Boron 1 kg/acre foliar
+Gram/Chickpea | 12     | 35        | 15       | 5  | Rhizobium inoculation substitutes N
+Canola        | 60     | 35        | 25       | -  | Add Sulphur (SSP or gypsum)
+
+FERTILIZER APPLICATION METHODS
+1. Broadcast + Incorporation: Most common; N losses high if no irrigation follows
+2. Band Placement (2-3 inches from seed, 2 inches deep): 25-30% fertilizer saving
+3. Fertigation (through drip system): Highest efficiency; apply little + often
+4. Foliar Spray: For micronutrients only; not practical for macronutrients
+5. Seed Treatment: Rhizobium for legumes; Zn + Fe for micronutrient priming
+
+FERTILIZER SUBSIDY IN PAKISTAN (as of 2023-24)
+- Urea: Subsidized price Rs 1,768/50kg bag (international parity ~Rs 3,000+)
+- DAP: Rs 9,500/50kg bag
+- SOP: Rs 4,500/50kg bag
+- Subsidy disbursed through: Kissan Card (Punjab), BISP farmers list
+
+NITROGEN USE EFFICIENCY IN PAKISTAN
+- Current NUE: ~30-35% (world average 40-45%; best practice 60-70%)
+- Improvement steps:
+  1. Split applications (multiple small doses > one large dose)
+  2. Apply just before rain/irrigation (not when fields are dry)
+  3. Neem-coated urea (NEEM-UREA): 10-15% higher NUE
+  4. Deep placement (Gora method): Urea 3-4 inches deep in rice — 40% saving

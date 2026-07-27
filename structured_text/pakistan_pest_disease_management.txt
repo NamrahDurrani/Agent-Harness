@@ -1,0 +1,58 @@
+INTEGRATED PEST MANAGEMENT FOR PAKISTAN — All Major Crops
+Source: Department of Plant Protection, Punjab IPM Programme
+
+REGULATORY BODIES
+- Department of Plant Protection (DPP), Karachi: National pesticide registration
+- Punjab Pesticides Authority: Provincial enforcement
+- Crop Disease Forecasting: Punjab Agriculture Department issues advisories
+
+WHEAT PEST AND DISEASE MANAGEMENT
+Diseases:
+- Yellow/Stripe Rust (Puccinia striiformis f.sp. tritici)
+  Symptoms: Yellow stripes along leaf veins
+  Threshold: Spray at 1-5% severity before heading
+  Fungicides: Propiconazole 250EC @ 160ml/acre, Tebuconazole 250EW @ 200ml/acre
+  Timing: One spray at flag leaf, second at heading if needed
+  
+- Loose Smut (Ustilago tritici)
+  Prevention ONLY: Treat seed with Raxil (Tebuconazole) @ 1g/kg or
+  Vitavax-200 (Carboxin+Thiram) @ 2.5g/kg seed
+
+- Karnal Bunt (Tilletia indica): Quarantine disease
+  Management: Use certified seed, Propiconazole seed treatment
+
+COTTON PEST MANAGEMENT (IPM Calendar)
+April-May (seedling):
+  - Thrips: Spray Dimethoate 40EC @ 300ml/acre if > 5 thrips/leaf
+  - Aphids: Imidacloprid 200SL @ 80ml/acre if > 50 aphids/leaf
+  
+June-July (vegetative):
+  - Whitefly: Buprofezin 25SC @ 400ml/acre if > 5 adults/leaf
+  - Dusky cotton bug: Malathion spray on soil around plant base
+  
+August-September (flowering/boll setting):
+  - Spotted bollworm: Pheromone trap monitoring; spray Emamectin if > 10 moths/trap/night
+  - Pink bollworm: Helicoverpa-specific BT formulations or Chlorfenapyr
+  - American bollworm: Spinosad 45SC @ 80ml/acre
+  - Mealy bug: Spray mixture of Chlorpyrifos + Triazophos under leaves and stems
+
+RICE PEST MANAGEMENT
+- Stem Borer (Chilo suppressalis): Dead heart in vegetative, white ear at heading
+  Spray Chlorpyrifos 40EC @ 500ml/acre when > 5% tillers affected
+- Brown Plant Hopper: Spray Fipronil 5SC @ 400ml/acre at > 10 hoppers/hill
+- Rice Blast: Spray Tricyclazole 75WP @ 80g/acre at initiation
+- Bacterial Leaf Blight: No cure; prevent with balanced N and resistant varieties
+
+LOCUST MANAGEMENT (Desert Locust — major threat)
+- Early warning: FAO-DLIS monitoring; DPP Pakistan issues alerts
+- Solitarious phase: No problem
+- Gregarious phase: Swarms travel 100-200 km/day; can eat own weight daily
+- Control: Malathion ULV spraying by aircraft/vehicle; best at dawn/dusk
+- Pakistan locust outbreak: 2019-2020 was worst in 26 years
+
+PESTICIDE SAFETY
+- PPE mandatory: Gloves, mask, goggles, coverall
+- Pre-harvest interval (PHI) must be observed
+- Never spray flowering crops (kills pollinators including honeybees)
+- Resistance management: Rotate chemical groups (IRAC classification)
+- Pakistan Pesticide Act 1971: Registration and enforcement framework

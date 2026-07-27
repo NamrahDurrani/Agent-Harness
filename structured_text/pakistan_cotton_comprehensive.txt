@@ -1,0 +1,59 @@
+COTTON PRODUCTION IN PAKISTAN — Comprehensive Guide
+Source: PARC, Central Cotton Research Institute Multan, Punjab Agriculture Dept
+
+OVERVIEW
+Cotton is Pakistan's largest industrial crop — the backbone of the textile industry.
+Formerly ~3 million hectares; declined to 2-2.2 million ha due to competition from
+maize, sugarcane, and climate change. Major producing districts: Multan, Bahawalpur,
+Rahim Yar Khan, Sanghar, Mirpur Khas.
+
+KEY VARIETIES
+- MNH-886: Released by Multan Nuclear Institute, very popular in Punjab
+- CIM-602: Central Cotton Research Institute Multan — bollworm tolerant
+- BH-187: Balochistan hybrid, suited to arid conditions  
+- Cyto-179: Early-maturing for areas with shorter growing season
+- FH-Lalazar: Faisalabad — dual-picking variety
+
+SOWING CALENDAR
+- Punjab: 1 May - 31 May (optimal); maximum by 15 June
+- Sindh: 15 April - 15 May
+- Seed rate: 5-6 kg/acre (delinted, treated seed)
+- Row spacing: 75 cm × 30 cm or 90 cm × 22.5 cm
+- Germination temperature: minimum 18°C soil temperature
+
+FERTILIZER RECOMMENDATIONS (Punjab)
+- Nitrogen: 75 kg N/acre; split in 3-4 applications
+  * First application at 3-4 leaf stage (3 weeks after emergence)
+  * Second at squaring (6-7 weeks)
+  * Third at boll development (if yield potential warrants)
+- Phosphorus: 25 kg P2O5/acre (at sowing)
+- Potassium: 25 kg K2O/acre (at sowing — critical for fiber quality)
+- Boron deficiency: Apply 1 kg Borax/acre as foliar spray (important for boll set)
+
+IRRIGATION MANAGEMENT
+- Total water requirement: 8-10 irrigations
+- Critical stages: Germination, Squaring, Flowering/Boll set, Boll filling
+- Drought stress at boll set reduces yield significantly
+- Waterlogging for >24 hours can kill plants — avoid in heavy soils
+
+MAJOR PEST MANAGEMENT (IPM Approach)
+- Whitefly (Bemisia tabaci): Most damaging vector of CLCuV
+  * Economic threshold: 6 adults/leaf
+  * Management: Imidacloprid at emergence, rotate with Buprofezin, Spiromesifen
+- Cotton Leaf Curl Virus (CLCuV): Vector = whitefly. No cure — use resistant varieties
+- Pink Bollworm: Use pheromone traps. Spray Emamectin or Spinosad if 5 moths/trap/night
+- Spotted Bollworm: Same as pink bollworm thresholds
+- American Bollworm: Spray Chlorfenapyr or Emamectin @ egg hatching
+- Thrips: Spray Dimethoate 40EC @ 300 ml/acre at seedling stage
+- Mealy Bug: Apply Chlorpyrifos + Triazophos mixture
+
+HARVESTING
+- First picking: 100-110 days after sowing (August-September)
+- Seed cotton: 3-4 pickings per season
+- Lint turnout: 33-38% (lint:seed cotton ratio)
+- Target moisture for ginning: 8-10%
+
+COTTON CRISIS IN PAKISTAN
+- Production dropped from 14 million bales (2015) to 5-6 million bales (2023)
+- Key causes: CLCuV resistance breakdown, late-sown crop, pesticide resistance,
+  heat stress during boll setting, small farm size reducing mechanization

@@ -1,0 +1,327 @@
+{
+  "FAO_wheat_diseases_guide.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:16.008892",
+    "url": "https://www.fao.org/3/i5550e/i5550e.pdf"
+  },
+  "FAO_cotton_production_guide.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:16.011021",
+    "url": "https://www.fao.org/3/ca2079en/CA2079EN.pdf"
+  },
+  "FAO_rice_production_south_asia.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:16.012995",
+    "url": "https://www.fao.org/3/i9553en/i9553en.pdf"
+  },
+  "FAO_maize_production_guide.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:16.014589",
+    "url": "https://www.fao.org/3/a-i5765e.pdf"
+  },
+  "FAO_fertilizer_recommendations.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:16.056142",
+    "url": "https://www.fao.org/3/ca5162en/ca5162en.pdf"
+  },
+  "FAO_soil_health_management.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:17.118730",
+    "url": "https://www.fao.org/3/cb4829en/cb4829en.pdf"
+  },
+  "FAO_irrigation_water_management.pdf": {
+    "status": "fail:too small (945 bytes)",
+    "ts": "2026-07-19T21:35:19.092546",
+    "url": "https://www.fao.org/3/i7967en/i7967en.pdf"
+  },
+  "FAO_integrated_pest_management.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:20.679278",
+    "url": "https://www.fao.org/3/i9535en/i9535en.pdf"
+  },
+  "FAO_sugarcane_production.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:20.703119",
+    "url": "https://www.fao.org/3/y4955e/y4955e.pdf"
+  },
+  "FAO_food_security_pakistan_2023.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:20.729399",
+    "url": "https://www.fao.org/3/cc6914en/cc6914en.pdf"
+  },
+  "FAO_drip_irrigation_guide.pdf": {
+    "status": "fail:too small (945 bytes)",
+    "ts": "2026-07-19T21:35:21.809743",
+    "url": "https://www.fao.org/3/s8684e/s8684e.pdf"
+  },
+  "FAO_sprinkler_irrigation.pdf": {
+    "status": "fail:too small (945 bytes)",
+    "ts": "2026-07-19T21:35:24.218304",
+    "url": "https://www.fao.org/3/s8682e/s8682e.pdf"
+  },
+  "FAO_crop_water_requirements.pdf": {
+    "status": "fail:too small (945 bytes)",
+    "ts": "2026-07-19T21:35:27.095123",
+    "url": "https://www.fao.org/3/x0490e/x0490e.pdf"
+  },
+  "FAO_water_quality_agriculture.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:29.223869",
+    "url": "https://www.fao.org/3/t0234e/t0234e.pdf"
+  },
+  "FAO_livestock_south_asia.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:29.242788",
+    "url": "https://www.fao.org/3/i3437e/i3437e.pdf"
+  },
+  "FAO_dairy_development_pakistan.pdf": {
+    "status": "fail:too small (945 bytes)",
+    "ts": "2026-07-19T21:35:30.175621",
+    "url": "https://www.fao.org/3/i3437e/i3437e00.pdf"
+  },
+  "FAO_poultry_development.pdf": {
+    "status": "skip",
+    "ts": "2026-07-19T21:35:33.537018",
+    "url": "https://www.fao.org/3/al877e/al877e.pdf"
+  },
+  "CIMMYT_wheat_rust_management.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:31:35.560320",
+    "url": "https://repository.cimmyt.org/bitstream/handle/10883/19601/60821.pdf"
+  },
+  "CIMMYT_maize_varieties_south_asia.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:31:38.852286",
+    "url": "https://repository.cimmyt.org/bitstream/handle/10883/20429/61453.pdf"
+  },
+  "CIMMYT_wheat_blast_guide.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:31:41.860802",
+    "url": "https://repository.cimmyt.org/bitstream/handle/10883/21501/63198.pdf"
+  },
+  "ICARDA_barley_production.pdf": {
+    "status": "fail:not a PDF (ct=text/html; charset=utf-8)",
+    "ts": "2026-07-19T21:31:48.787927",
+    "url": "https://hdl.handle.net/20.500.11766/6538"
+  },
+  "ICARDA_lentil_chickpea_guide.pdf": {
+    "status": "fail:not a PDF (ct=text/html; charset=utf-8)",
+    "ts": "2026-07-19T21:31:53.545427",
+    "url": "https://hdl.handle.net/20.500.11766/5765"
+  },
+  "USDA_pakistan_grain_oilseeds_2023.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='apps.fas.usda.gov', port=443): Max",
+    "ts": "2026-07-19T21:36:59.347251",
+    "url": "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Grain%20and%20Feed%20Annual_Islamabad_Pakistan_PK2023-0007.pdf"
+  },
+  "USDA_pakistan_cotton_report_2023.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='apps.fas.usda.gov', port=443): Max",
+    "ts": "2026-07-19T21:37:15.603387",
+    "url": "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Cotton%20and%20Products%20Annual_Islamabad_Pakistan_PK2023-0005.pdf"
+  },
+  "USDA_pakistan_sugar_report_2023.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='apps.fas.usda.gov', port=443): Max",
+    "ts": "2026-07-19T21:37:31.819534",
+    "url": "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Sugar%20Annual_Islamabad_Pakistan_PK2023-0006.pdf"
+  },
+  "USDA_pakistan_oilseeds_2023.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='apps.fas.usda.gov', port=443): Max",
+    "ts": "2026-07-19T21:37:47.099049",
+    "url": "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Oilseeds%20and%20Products%20Annual_Islamabad_Pakistan_PK2023-0004.pdf"
+  },
+  "USDA_pakistan_poultry_2023.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='apps.fas.usda.gov', port=443): Max",
+    "ts": "2026-07-19T21:38:02.905924",
+    "url": "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Poultry%20and%20Products%20Annual_Islamabad_Pakistan_PK2023-0003.pdf"
+  },
+  "WorldBank_pakistan_agriculture_2022.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:38:06.497662",
+    "url": "https://documents1.worldbank.org/curated/en/099350004132228020/pdf/P17795200be39a05a0b3db0f042e8eca434.pdf"
+  },
+  "WorldBank_pakistan_water_scarcity.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:38:09.392802",
+    "url": "https://documents1.worldbank.org/curated/en/440821563193846498/pdf/Pakistan-Water-Security.pdf"
+  },
+  "WorldBank_pakistan_rural_development.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:38:12.350595",
+    "url": "https://documents1.worldbank.org/curated/en/289501468284813656/pdf/multi-page.pdf"
+  },
+  "WorldBank_climate_smart_agriculture.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:38:15.501600",
+    "url": "https://documents1.worldbank.org/curated/en/986961468000547386/pdf/multi-page.pdf"
+  },
+  "MDPI_wheat_yield_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:18.648723",
+    "url": "https://www.mdpi.com/2073-4395/12/1/43/pdf"
+  },
+  "MDPI_cotton_pest_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:21.143139",
+    "url": "https://www.mdpi.com/2075-4450/13/4/370/pdf"
+  },
+  "MDPI_soil_degradation_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:23.244860",
+    "url": "https://www.mdpi.com/2073-445X/11/5/651/pdf"
+  },
+  "MDPI_drip_irrigation_cotton.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:25.957405",
+    "url": "https://www.mdpi.com/2073-4441/14/7/1057/pdf"
+  },
+  "MDPI_climate_change_wheat_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:29.587227",
+    "url": "https://www.mdpi.com/2073-4395/11/5/842/pdf"
+  },
+  "MDPI_rice_water_use_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:33.203492",
+    "url": "https://www.mdpi.com/2073-4441/13/10/1383/pdf"
+  },
+  "MDPI_sugarcane_varieties_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:37.072945",
+    "url": "https://www.mdpi.com/2073-4395/13/2/398/pdf"
+  },
+  "MDPI_salinity_management_sindh.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:39.482639",
+    "url": "https://www.mdpi.com/2073-4395/12/4/827/pdf"
+  },
+  "MDPI_maize_hybrid_kpk.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:41.985303",
+    "url": "https://www.mdpi.com/2073-4395/10/11/1661/pdf"
+  },
+  "MDPI_mango_postharvest_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:45.418243",
+    "url": "https://www.mdpi.com/2304-8158/10/6/1224/pdf"
+  },
+  "MDPI_potato_disease_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:48.310847",
+    "url": "https://www.mdpi.com/2075-4450/11/11/805/pdf"
+  },
+  "MDPI_sunflower_drought_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:50.372741",
+    "url": "https://www.mdpi.com/2073-4395/11/2/237/pdf"
+  },
+  "MDPI_nitrogen_wheat_punjab.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:38:53.757692",
+    "url": "https://www.mdpi.com/2073-4395/9/10/622/pdf"
+  },
+  "Pakistan_agriculture_statistics_2021.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:38:56.779449",
+    "url": "https://mnfsr.gov.pk/publicationFiles/Agricultural%20Statistics%20of%20Pakistan%202020-21.pdf"
+  },
+  "Punjab_crop_production_guide_wheat.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:00.267482",
+    "url": "https://agripunjab.gov.pk/system/files/wheat_package.pdf"
+  },
+  "Punjab_crop_production_guide_cotton.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:03.858209",
+    "url": "https://agripunjab.gov.pk/system/files/cotton_package.pdf"
+  },
+  "Punjab_crop_production_guide_rice.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:07.636420",
+    "url": "https://agripunjab.gov.pk/system/files/rice_package.pdf"
+  },
+  "Punjab_crop_production_guide_maize.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:09.840307",
+    "url": "https://agripunjab.gov.pk/system/files/maize_package.pdf"
+  },
+  "Punjab_crop_production_guide_sugarcane.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:12.042917",
+    "url": "https://agripunjab.gov.pk/system/files/sugarcane_package.pdf"
+  },
+  "PARC_annual_report_2022_23.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:15.398589",
+    "url": "https://parc.gov.pk/images/annual_reports/PARC_Annual_Report_2022-23.pdf"
+  },
+  "PARC_annual_report_2021_22.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:18.705303",
+    "url": "https://parc.gov.pk/images/annual_reports/PARC_Annual_Report_2021-22.pdf"
+  },
+  "CGIAR_pakistan_agrifood_systems_history.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='cgspace.cgiar.org', port=443): Max",
+    "ts": "2026-07-19T21:35:46.915559",
+    "url": "https://cgspace.cgiar.org/server/api/core/bitstreams/3dc88bfb-ab7f-4246-a1d7-21d79339e1d8/content"
+  },
+  "CGIAR_climate_smart_agriculture_KPK.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='cgspace.cgiar.org', port=443): Max",
+    "ts": "2026-07-19T21:36:01.200293",
+    "url": "https://cgspace.cgiar.org/server/api/core/bitstreams/39e9e7c5-3e7b-4c99-b5e5-2d1a9c9a1c3e/content"
+  },
+  "CGIAR_climate_smart_agriculture_Punjab.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='cgspace.cgiar.org', port=443): Max",
+    "ts": "2026-07-19T21:36:15.972762",
+    "url": "https://cgspace.cgiar.org/server/api/core/bitstreams/8f6b2d9a-4e1c-4b7a-9d3f-1e2c3a4b5d6e/content"
+  },
+  "ICARDA_annual_report_2020.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:36:19.013137",
+    "url": "https://annual-report-2020.icarda.org/wp-content/uploads/2021/09/ICARDA-Annual-Report-2020.pdf"
+  },
+  "CIMMYT_wheat_rust_identification.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:36:21.984868",
+    "url": "https://repository.cimmyt.org/bitstreams/ea123b5e-9448-49bf-8634-c18011e829cd/download"
+  },
+  "CIMMYT_wheat_consumption_pakistan.pdf": {
+    "status": "fail:HTTP 403",
+    "ts": "2026-07-19T21:36:25.418763",
+    "url": "https://repository.cimmyt.org/server/api/core/bitstreams/e1fc7a28-e38a-4d9a-a763-1981f4b05b4f/content"
+  },
+  "CGIAR_pakistan_rice_puddled_vs_zerotill.pdf": {
+    "status": "fail:RetryError: HTTPSConnectionPool(host='cgspace.cgiar.org', port=443): Max",
+    "ts": "2026-07-19T21:36:41.087127",
+    "url": "https://cgspace.cgiar.org/server/api/core/bitstreams/613628df-8ebe-4c0e-9659-f30059640298/content"
+  },
+  "PARC_annual_report_2020_21.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:21.386336",
+    "url": "https://parc.gov.pk/images/annual_reports/PARC_Annual_Report_2020-21.pdf"
+  },
+  "Pakistan_economic_survey_agri_2023.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:23.117926",
+    "url": "https://www.finance.gov.pk/survey/chapters_23/02-Agriculture.pdf"
+  },
+  "Pakistan_economic_survey_agri_2022.pdf": {
+    "status": "fail:HTTP 404",
+    "ts": "2026-07-19T21:39:25.414310",
+    "url": "https://www.finance.gov.pk/survey/chapters_22/02-Agriculture.pdf"
+  },
+  "Pakistan_economic_survey_agri_2021.pdf": {
+    "status": "ok",
+    "ts": "2026-07-19T21:39:28.320421",
+    "url": "https://www.finance.gov.pk/survey/chapters_21/02-Agriculture.pdf"
+  },
+  "NARC_variety_catalog_2023.pdf": {
+    "status": "fail:connection (err)",
+    "ts": "2026-07-19T21:40:32.797242",
+    "url": "https://narc.gov.pk/download/variety-catalog-2023.pdf"
+  },
+  "Sindh_agriculture_policy_2020.pdf": {
+    "status": "fail:connection (err)",
+    "ts": "2026-07-19T21:41:38.419024",
+    "url": "https://sindhagri.gos.pk/files/Sindh-Agriculture-Policy.pdf"
+  }
+}

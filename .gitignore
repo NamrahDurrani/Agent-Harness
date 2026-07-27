@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environment
+venv/
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# SQLite
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+
+# React
+dist/
+build/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# HuggingFace
+.cache/
+
+# Chroma
+chroma_db/
+
+# FAISS
+*.faiss
+*.pkl
+
+# Temporary
+temp/
+tmp/
+
+# PDF outputs
+generated_pdfs/

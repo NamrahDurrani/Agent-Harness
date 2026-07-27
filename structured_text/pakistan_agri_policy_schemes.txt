@@ -1,0 +1,76 @@
+PAKISTAN AGRICULTURE POLICY, SCHEMES AND SUPPORT
+Source: MNFSR, Punjab Agriculture Department, State Bank of Pakistan
+
+MAJOR GOVERNMENT SCHEMES (2022-2024)
+
+1. KISSAN CARD (Punjab)
+   - Launched: 2020 (revived 2023 under Punjab Apna Ghar/Kissan Card scheme)
+   - Benefit: Rs 25,000/crop season per acre (max 12.5 acres)
+   - Use: Can spend at registered input dealers only (fertilizer, seed, pesticide)
+   - Eligibility: Registered farmer, CNIC must match land record
+   - Status 2023-24: Rs 25 billion disbursed to 1.4 million farmers
+
+2. PRIME MINISTER'S AGRICULTURE EMERGENCY PROGRAMME
+   - High-yield seed distribution at subsidized rates
+   - 10% subsidy on DAP fertilizer
+   - 50% subsidy on laser land leveling (Rs 1,500/acre)
+   - Tube well solarization subsidy (covers 50% of solar panel cost)
+   
+3. KREDITHI / ZARAI TARAQIATI BANK (ZTBL)
+   - Agricultural credit at 5-7% markup (concessionary)
+   - Short-term: Seed, fertilizer, pesticide (6-12 months)
+   - Medium-term: Farm machinery, tube wells (3-5 years)
+   - Long-term: Land development, orchards (5-10 years)
+   - Total ZTBL credit 2022-23: Rs 360 billion disbursed
+   - Target for farmers < 12.5 acres: 70% of portfolio
+
+4. CROP INSURANCE
+   - Pakistan Agriculture Insurance Company (PAIC)
+   - Mandated for ZTBL borrowers
+   - Coverage: Yield loss from flood, drought, hail, frost, pests
+   - Premium: 2-3% of sum insured (subsidized 50% by Govt)
+   - Challenge: Low outreach; mostly formal credit borrowers covered
+
+MINIMUM SUPPORT PRICES (MSP) 2023-24
+- Wheat: Rs 3,900/40 kg (PKR 97.5/kg) — announced by federal govt
+- Sugarcane: Rs 425/40 kg (Sindh); Rs 300/40 kg (Punjab)
+- Cotton: No formal MSP; price discovered at ginning factory
+- Paddy (fine basmati): Market-determined; no MSP
+- Oilseeds: No MSP — imported at international prices
+
+AGRICULTURE RESEARCH BUDGET
+- PARC budget 2023-24: Rs 8.5 billion
+  * Of which capital: Rs 1.2 billion
+  * Of which salaries: Rs 6.8 billion
+  * Research funds: Only Rs 0.5 billion (very limited)
+- NARC Islamabad: Headquarters, 2600 acres research farm
+- 4 Regional Agricultural Research Institutes (RARI):
+  * ARI Faisalabad: Wheat, cotton, oilseeds
+  * ARI Tarnab, Peshawar: Maize, tobacco, fruits (KPK)
+  * ARI Sariab, Quetta: Drought-tolerant crops (Balochistan)
+  * ARI Tandojam: Rice, sugarcane, vegetables (Sindh)
+
+CROP REPORTING SERVICE
+- Punjab CRS: Annual estimates of all crops by district
+- Report: Monthly Agricultural Statistics (area, production, yield)
+- Data access: mnfsr.gov.pk → Publications → Agricultural Statistics
+- Pakistan Agriculture Census: Every 10 years (last completed: 2010; 2020 Mouza Census)
+
+EXPORT OF AGRICULTURE COMMODITIES
+- Rice (basmati): $1.1 billion/year (Afghanistan, Saudi Arabia, UAE, US)
+- Mango: $70 million/year (UK, Middle East)
+- Kinnow: $100 million/year (Russia, Iran, Afghanistan, Saudi Arabia)
+- Cotton (raw): Pakistan is net importer due to domestic shortage
+- Wheat: Export banned when domestic shortage; export allowed surplus years
+- Trade body: TDAP (Trade Development Authority of Pakistan)
+
+CLIMATE CHANGE IMPACT ON PAKISTAN AGRICULTURE
+- Temperature rise: +0.3°C/decade in Pakistan (faster than global average)
+- Glacier melt: 7,000+ glaciers in Pakistan; Indus water initially higher then crash
+- Flood 2022: 33 million affected, $4.8 billion agriculture losses
+  (Sindh: 80% cotton crop destroyed; Balochistan: 50% of orchards)
+- Drought in Tharparkar, Cholistan: Recurring food insecurity
+- Adaptation measures being promoted:
+  * Heat-tolerant wheat varieties (NARC-2019, Borlaug-2016)
+  * Zero-tillage for wheat (saves 3 litre diesel/acre, reduces moisture loss)
+  * Crop diversification (oilseeds, pulses instead of mono-cotton)

@@ -1,0 +1,60 @@
+WHEAT PRODUCTION IN PAKISTAN — Comprehensive Guide
+Source: PARC, Punjab Agriculture Department, FAO
+
+OVERVIEW
+Pakistan is the 7th largest wheat producer in the world. Wheat is the staple food
+crop, covering approximately 9 million hectares annually. Punjab contributes ~75%
+of total production. The crop is a Rabi (winter) crop sown Oct-Nov and harvested
+Apr-May.
+
+KEY VARIETIES (Released by PARC/Punjab)
+- NARC-2011: High yielding, rust resistant, 5500 kg/ha potential
+- Punjab-2011: Widely grown in Punjab, tolerates heat stress
+- Akbar-2019: Released by ARI Faisalabad, high yield 6000+ kg/ha
+- AARI-2011: Rust resistant, widely cultivated
+- Zincol-2016: Zinc-biofortified variety, 5800 kg/ha, improves human nutrition
+- Borlaug-2016: Climate-resilient, suits late-sown conditions
+- Johar-2016: Good for Sindh and Balochistan
+- Pakistan-2013: Medium to late maturity, suited to central Punjab
+
+SOWING RECOMMENDATIONS (Punjab)
+- Optimal sowing window: 1-15 November (Punjab plains)
+- Late sowing: 15 Nov - 15 Dec (yield penalty 30-40 kg/ha per day late)
+- Seed rate: 50-60 kg/acre for timely sown; 60-75 kg/acre for late sown
+- Row spacing: 22.5 cm (9 inches) preferred
+- Seed depth: 5-7 cm
+
+FERTILIZER RECOMMENDATIONS (Punjab)
+- Timely sown: Nitrogen 75 kg/acre, Phosphorus 35 kg/acre, Potassium 25 kg/acre
+- Split N application: 50% at sowing, 50% at first irrigation (Crown Root Initiation)
+- Zinc deficiency common in Punjab — apply 5 kg ZnSO4/acre if soil Zn < 0.8 ppm
+
+IRRIGATION SCHEDULE
+- Total irrigations: 3-5 depending on soil type and rainfall
+- Critical stages: Crown Root Initiation (20-25 days), Tillering, Jointing, Heading, Grain Filling
+- Do NOT irrigate at flowering (increases disease)
+
+MAJOR DISEASES
+- Yellow Rust (Puccinia striiformis): Most destructive. Stripe pattern on leaves.
+  Management: Resistant varieties + Tebuconazole/Propiconazole spray if >5% severity
+- Leaf Rust (Puccinia triticina): Circular orange pustules on leaves
+- Stem Rust (Puccinia graminis): Orange-brown pustules on stem (Ug99 race — major threat)
+- Karnal Bunt (Tilletia indica): Partially bunted grains, fishy smell
+  Management: Thiram/Carboxin seed treatment, QS varieties
+- Loose Smut: Treat seed with Vitavax-200 @ 2.5 g/kg seed
+
+MAJOR INSECTS
+- Aphids: Spray Imidacloprid 200SL @ 125 ml/acre at 200-250 aphids/tiller
+- Termites: Apply Chlorpyrifos @ 1.5 litre/acre in irrigation water
+- Army Worm: Spray Chlorpyrifos or Lambda-cyhalothrin
+
+HARVESTING
+- Harvest when grain moisture reaches 14-16%
+- Combine harvester: Set concave clearance 12-15 mm for wheat
+- Threshing losses should not exceed 1.5%
+
+YIELD POTENTIAL vs ACTUAL
+- National average: ~3000 kg/ha (30 mounds/acre)
+- Achievable on-farm: 4500-5000 kg/ha
+- Research station yield: 6000-7000 kg/ha
+- Yield gap caused by: Late sowing, unbalanced fertilization, water stress, variety mismatch

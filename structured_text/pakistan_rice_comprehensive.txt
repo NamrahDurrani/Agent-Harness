@@ -1,0 +1,63 @@
+RICE PRODUCTION IN PAKISTAN — Comprehensive Guide
+Source: Rice Research Institute Kala Shah Kaku, PARC, Punjab Agri Dept
+
+OVERVIEW
+Pakistan is 10th largest rice producer globally. Two types:
+1. Basmati rice — aromatic, long-grain, premium export commodity
+   Produced in: Sheikhupura, Gujranwala, Sialkot, Narowal, Hafizabad
+2. IRRI/Coarse rice — short grain, high yield, grown in Sindh
+   Produced in: Larkana, Sukkur, Shikarpur, Nawabshah
+
+VARIETIES
+Basmati varieties:
+- Super Basmati: Most exported, 7.5-8mm grain length, very aromatic
+- Basmati-515: Dwarf type, lodging resistant, 5.5-6.5 t/ha potential
+- Kernal Basmati: Very fragrant, premium price but low yield 3-4 t/ha
+- PK-386: Short duration basmati (125 days), suited for double cropping
+IRRI varieties:
+- KSK-282: High yielding 7-8 t/ha, suited to Sindh
+- KSK-133: Disease resistant, medium maturity
+- IR-6: Still widely grown in Sindh, early maturity
+
+CROP CALENDAR
+- Nursery raising: 15 May - 15 June
+- Transplanting: 15 June - 15 July (optimal window)
+- Harvest: October - November
+- Crop duration: 120-145 days depending on variety
+
+NURSERY MANAGEMENT
+- Seed rate: 8-10 kg/acre for transplanted rice
+- Nursery area: 1/10th of field area
+- Apply 1 bag urea per kanal of nursery 10-12 days after sowing
+- Transplant at 20-25 days age (seedling height 25-35 cm)
+
+LAND PREPARATION (Puddling)
+- Flood field, plough 2-3 times while flooded (puddling)
+- Purpose: Reduces water percolation by 40-50%
+- Level field to within ± 2 cm — critical for uniform water distribution
+
+FERTILIZER (per acre, Punjab recommendations)
+- Basmati: N 70 kg, P 25 kg, K 25 kg, Zinc 5 kg ZnSO4
+- IRRI: N 80-100 kg, P 35 kg, K 30 kg
+- Split N: 50% at transplanting, 25% at tillering, 25% at panicle initiation
+- Zinc deficiency very common in calcareous soils — yellowing of leaves
+
+WATER MANAGEMENT
+- Continuous flooding traditional method — 1200-1400 mm water/season
+- Alternate Wetting and Drying (AWD): 30% water saving, same yield
+  * Install perforated pipe 25 cm deep, maintain water 15 cm below surface
+  * Re-flood when water drops to 15 cm below surface
+  * AVOID AWD during flowering (pollination needs standing water)
+
+MAJOR DISEASES
+- Rice Blast (Pyricularia oryzae): Most destructive fungal disease
+  * Leaf blast: Diamond-shaped grey lesions with brown border
+  * Neck blast: Most damaging — affects grain filling. Spray Tricyclazole
+- Bacterial Leaf Blight (Xanthomonas oryzae): Water-soaked lesions from leaf tip
+  * No effective fungicide — use resistant varieties, balanced N fertilization
+- Brown Plant Hopper: Spray Buprofezin or Fipronil when 10 hoppers/hill
+
+HARVESTING
+- Harvest at 20-22% grain moisture (wait for field to dry somewhat)
+- Combine adjusted for rice: slow cylinder speed, wide concave gap
+- Delay of 1 week past optimal harvest = 5-7% yield loss (shattering)

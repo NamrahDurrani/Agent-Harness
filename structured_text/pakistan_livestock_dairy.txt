@@ -1,0 +1,70 @@
+LIVESTOCK AND DAIRY IN PAKISTAN
+Source: Pakistan Bureau of Statistics, PARC Animal Sciences Division
+
+OVERVIEW
+Pakistan has one of the world's largest livestock populations:
+- Total livestock value: Rs 2.1 trillion/year (56% of agriculture sector value)
+- Employs 8-10 million rural households
+- Livestock share in GDP: ~12%
+- Buffalo and cattle milk Pakistan: 4th largest milk producer globally
+
+LIVESTOCK POPULATION (2022-23)
+Species         | Population    | Main Use
+Buffalo         | 44 million    | Milk + Draft (90% of buffalo milk globally from Pakistan+India)
+Cattle          | 53 million    | Milk + Beef + Draft
+Goats           | 80 million    | Meat + Milk + Hair (Mohair from Angora breeds)
+Sheep           | 32 million    | Meat + Wool
+Camels          | 1.1 million   | Milk + Meat + Transport (Balochistan/Thar)
+Poultry (broiler)| 1.4 billion/yr | Meat (urban markets)
+Poultry (layers)| 55 million    | Eggs
+Donkeys         | 5.7 million   | Draft (rural transport)
+
+MILK PRODUCTION
+- Total milk production: 66 billion litres/year
+- Nili-Ravi buffalo: Premium milk breed; 8-12 litre/day; 7-8% fat content
+- Sahiwal cattle: Indigenous dairy breed; 8-12 litre/day; heat tolerant
+- Holstein-Friesian cross: 20-30 litre/day in good management; poor heat tolerance
+- Frieswal (HF × Sahiwal cross): 15-20 litre/day; better heat adaptation
+
+MAJOR DISEASES
+Foot and Mouth Disease (FMD):
+  Caused by: Aphthovirus (types O, A, Asia-1 prevalent in Pakistan)
+  Symptoms: Blisters on mouth, feet, teats; high fever; severe production loss
+  Vaccination: Trivalent vaccine (O+A+Asia-1) twice yearly
+  Pakistan FMD status: Endemic — major trade barrier for livestock export
+
+Brucellosis:
+  Caused by: Brucella abortus (cattle) / B. melitensis (small ruminants)
+  Symptoms: Abortion in last trimester, retained placenta, reduced fertility
+  Control: Test and slaughter in organized farms; no effective vaccine in Pakistan
+  Zoonotic: Humans get undulant fever from raw milk — serious public health issue
+  
+Lumpy Skin Disease (LSD):
+  Emerged in Pakistan 2022-23; massive outbreak in Punjab and Sindh
+  Caused by: Capripoxvirus; spread by biting insects
+  Symptoms: Skin nodules (2-5 cm), fever, reduced milk, weight loss
+  Mortality: 1-5% in affected animals
+  Control: Sheeppox vaccine (heterologous protection); vector control
+
+Peste des Petits Ruminants (PPR):
+  Affects: Goats and sheep
+  Symptoms: Fever, nasal discharge, diarrhoea, pneumonia; mortality 50-80%
+  Control: Cell-culture attenuated vaccine; 3-yearly vaccination
+
+ANIMAL HUSBANDRY PRACTICES
+Feeding systems:
+  - Landless urban dairy: Total mixed ration (TMR) with cotton seed cake, green fodder
+  - Peri-urban: Gawala (traditional milkman) system
+  - Rural: Extensive grazing + crop residue feeding (straw, husk, bhusa)
+  
+Green fodder crops:
+  Berseem (Egyptian Clover): Sown Oct-Nov; cut Nov-Apr; 8-10 cuts/season
+  Maize silage: Best energy feed; ensile at 30-35% DM; 6-8 ton DM/acre
+  Sorghum-Sudan hybrid: High tonnage summer fodder; 4-6 cuts
+  Mott grass: Perennial; 8-10 ton DM/acre/year; suited to Sindh
+
+POULTRY INDUSTRY
+- Broiler: 42-day cycle; FCR 1.7-1.8; Liveable liveweight 2.2 kg
+- Layer: 72 weeks production; peak production 90-94%; 280-300 eggs/hen/year
+- Key disease threats: Newcastle Disease, Infectious Bursal Disease (Gumboro),
+  Marek's Disease, Avian Influenza (H5N1 and H9N2 enzootic in Pakistan)

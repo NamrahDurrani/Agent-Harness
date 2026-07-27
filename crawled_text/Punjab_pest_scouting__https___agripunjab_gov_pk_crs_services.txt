@@ -1,0 +1,156 @@
+Crop Estimates
+| Current Estimates | |||
+| 2025 - 26 | 2025 - 26 | ||
+| 
+Kharif Crops Estimates
+ | 
+Rabi Crops Estimates
+ | ||
+| 
+ | |||
+| 2024 - 25 Final Kharif Crops EstimatesFinal Rabi Crops Estimates
+ | |||
+| 2023 - 24 | |||
+| 2021 - 22 | 2022 - 23 | ||
+| 2020 - 21 | 2019 - 20 | ||
+| 2018 - 19 | 2017 - 18 | ||
+| 2016 - 17 | 2015 - 16 | ||
+| 2014 -15 | 2013 - 14 | ||
+| 2011 - 12 | 2012 - 13 | ||
+| 2010 - 11 | 2009 - 10 | ||
+| 2008 - 09 | 2007 - 08 | ||
+Crop Details
+Estimates of following crops are produced by Crop Reporting Service, Punjab:
+| Kharif Crops | Rabi Crops | Kharif Vegetables | Rabi Vegetables | 
+| 
+Sugarcane
+Rice
+Cotton
+Bajra
+Jowar
+Maize
+Sesamum
+Turmeric (Haldi)
+Chilies
+Groundnut
+Soybean
+Safflower
+Sunflower
+ | 
+Wheat
+Tomato
+Tobacco
+Rapeseed & Mustard
+Potato
+Onion
+Linseed (Alsee)
+Gram
+Garlic
+Coriander
+Barley
+ | 
+Lady Finger
+Bitter Gourd
+Bottle Gourd
+Arum
+Field Vetch (Gowar)
+Cucumber
+Beans
+Long Melon
+Luffa
+Lotus Roots (Bheeh)
+Pumpkin
+Musk Melon
+Tinda
+Watermelon
+ | 
+Cauliflower
+Radish
+Spinach
+Sweet Potato
+Turnip
+Mattar (Green)
+Beans
+Beets (Chakandar)
+Fennogreek (Methi)
+Lettuce (Salad)
+Khol Khal
+Carrot
+Cabbage
+Brinjal
+ | 
+| Kharif Fruits | Rabi Fruits | Kharif Pulses | Rabi Pulses | 
+| 
+Almond
+Apple
+Apricot
+Banana
+Chikoo
+Coconut
+Dates
+Figs
+Guava
+Jamun
+Litchi
+Mango
+Pomegranate
+Plums
+Pears
+Phalsa
+Papaya
+Peaches
+Walnut
+ | 
+Banana
+Ber
+Guava
+Laquat
+Grapes
+Dates
+Almond
+Mulbery
+Others
+Grape Fruit
+Kinnu
+Lemon
+Mandarin
+Orange
+Musambi
+Sour Lime
+Sour Orange
+Sweet Lime
+Other Citrus
+ | 
+Mung
+Mash
+Other Kharif Pulses
+ | 
+Lentil (Masoor)
+Matar (Pulse)
+Other Rabi Pulses
+ | 
+Land Utilization
+Mentioned below are the composite factors of Land Utilization:
+Forest Area
+- 
+Area of any land classed or administered as forest under any legal enactment dealing with forests. Any cultivated area which may exist within such forest should be excluded (shown under heading cultivated area). Area unavailable for Cultivation 
+Geographical Area
+- Area which has been surveyed and calculated by the survey of Pakistan.Total Area Reported
+- Total physical area of the village/deh, tehsil or district etc.
+- Uncultivated area of the farm which is under farm home-steads, farm roads and other connected purposes and therefore not available for cultivation
+Culturable Waste
+- 
+Uncultivated farm area which is fit for cultivation but was not cropped during the year under reference nor in the year before that 
+Cultivated Area
+- Area which was sown at least during the year under reference or during the previous year
+- Cultivated Area = Net Area sown + Current flow
+Current Flow
+- 
+Area which is vacant during the year under reference but was sown at least once during the previous year 
+Net Area Sown
+- Area which is sown at least once during (Kharif & Rabi) the year under reference
+- Area Sown more than once
+- The difference between the total cropped area and the net area sown
+Total Cropped Area
+- 
+The aggregate area of crops raised in a farm during the year under reference including the area under fruit trees

@@ -1,0 +1,61 @@
+SOIL TYPES AND FERTILITY IN PAKISTAN
+Source: Soil Fertility Research Institute Punjab, PARC Natural Resources Division
+
+MAJOR SOIL TYPES
+1. Alluvial Soils (60% of cultivated area)
+   - Location: Indus plains — Punjab, Sindh
+   - Formed by river deposits from Himalayan rivers
+   - Generally fertile but deficient in N, P, and micronutrients
+   - Sub-types: Loam, Clay Loam, Sandy Loam
+   - pH: 7.5-8.5 (calcareous)
+
+2. Saline-Alkaline Soils (Kallar) — 6.8 million hectares affected
+   - Problem areas: Lower Punjab (Multan, Bahawalpur), Sindh
+   - EC > 4 dS/m (saline) or pH > 8.5 (sodic)
+   - Management: Gypsum @ 5-10 tons/acre, leaching, salt-tolerant varieties
+   - Gypsum requirement: Based on soil test — apply CaSO4 to displace Na+
+
+3. Sandy/Desert Soils (Cholistan, Thar)
+   - Very low organic matter (<0.5%)
+   - Poor water holding capacity
+   - Wind erosion major issue
+
+4. Mountain Soils (KPK, Balochistan, AJK)
+   - Shallow, stony
+   - Higher organic matter in higher elevations
+   - Terracing required to prevent erosion
+
+NUTRIENT DEFICIENCIES (Pakistan-wide survey results)
+Nutrient     | % Deficient Soils | Critical Level    | Recommendation
+Nitrogen     | 95%               | -                 | Apply as per crop requirement
+Phosphorus   | 90%               | 7 ppm Olsen P     | DAP or SSP at sowing
+Zinc         | 70%               | <0.8 ppm DTPA     | ZnSO4 5 kg/acre or foliar 0.5%
+Boron        | 60%               | <0.5 ppm          | Borax 1 kg/acre foliar spray
+Iron         | 40%               | <4.5 ppm DTPA     | FeSO4 foliar @ 0.5%
+Potassium    | 30% in sandy soils| <100 ppm NH4OAc K | SOP or MOP in light soils
+Sulphur      | 25%               | <10 ppm SO4-S     | Gypsum or elemental S
+
+ORGANIC MATTER STATUS
+- Punjab average: 0.8% (critically low — optimal >2%)
+- Sindh: 0.5-0.7% (very low)
+- KPK mountain soils: 2-4% (adequate)
+
+IMPROVING SOIL ORGANIC MATTER
+- Farmyard manure: 8-10 tons/acre (most farmers apply 3-4 tons)
+- Green manuring: Senji (Trifolium alexandrinum) — sow in Oct, incorporate Mar
+- Rice straw incorporation (Punjab): Spreads straw, disc-plough into soil
+  Avoids burning (which emits 4 kg N/ton straw + CO2 + particulates)
+- Compost: Municipal compost 5-8 tons/acre
+- Recommended rotation: Include legume every 3rd crop for N addition
+
+SOIL TESTING SERVICES
+- Punjab: Soil Fertility Research Institute, Lahore — free testing for farmers
+  Send 500g soil from 0-15cm depth
+- Test parameters: pH, EC, OM, N, P, K, Zn, B minimum
+- Frequency: Every 3 years minimum
+
+WATER QUALITY FOR IRRIGATION
+- Indus system water EC: 0.3-0.8 dS/m (good quality)
+- Tube well water in saline areas: EC 1.5-4.0 dS/m (marginal to poor)
+- RSC (Residual Sodium Carbonate) > 2.5 meq/L = harmful (use gypsum)
+- SAR > 13 = sodification risk

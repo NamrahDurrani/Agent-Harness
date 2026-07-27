@@ -1,0 +1,50 @@
+PAKISTAN CROP CALENDAR — All Major Crops
+Source: Punjab Agriculture Department, Sindh Agri Dept, PARC
+
+RABI SEASON (Winter — Sown Oct-Nov, Harvested Apr-May)
+─────────────────────────────────────────────────────────
+Crop        | Sowing Window     | Harvest       | Province
+Wheat       | Oct 15 - Nov 15   | Apr 15-May 15 | All provinces (Punjab = 75% area)
+Gram/Chickpea| Oct 15-Nov 15    | Mar-Apr       | Punjab (Talagang, D.G.Khan), Balochistan
+Lentil      | Oct 15-Nov 1      | Mar-Apr       | Punjab, Balochistan
+Barley      | Oct 15-Nov 15     | Apr-May       | Balochistan, KPK, Punjab
+Mustard/Canola| Oct 1-15        | Feb-Mar       | Punjab (Faisalabad, Sargodha, Jhang)
+Potato (Rabi)| Sep 25-Oct 15   | Jan-Feb       | Punjab (Okara, Sahiwal, Pakpattan)
+Sunflower   | Feb 1-Mar 1       | Jun-Jul       | Punjab, Sindh
+
+KHARIF SEASON (Summer — Sown Apr-Jun, Harvested Oct-Dec)
+──────────────────────────────────────────────────────────
+Crop        | Sowing Window     | Harvest       | Province
+Cotton      | Apr 20-Jun 15     | Sep-Dec       | Punjab (central), Sindh
+Rice-Basmati| Jun 15-Jul 15     | Oct-Nov       | Punjab (Gujranwala, Sheikhupura)
+Rice-IRRI   | Jun 1-Jul 1       | Oct-Nov       | Sindh (Larkana, Sukkur)
+Maize       | Apr 15-May 15     | Aug-Sep       | KPK (Peshawar Valley), Punjab
+Sugarcane   | Feb-Mar (spring)  | Nov-Apr       | Punjab (Faisalabad), Sindh
+            | Sep-Oct (autumn)  |               |
+Mung Bean   | Apr 15-May 15     | Jun-Jul       | Punjab (central districts)
+Mash (Urd)  | Jul 1-15          | Sep-Oct       | Punjab
+Sorghum     | May-Jun           | Sep-Oct       | Punjab, Sindh (fodder use)
+
+YEAR-ROUND / PERENNIAL
+──────────────────────────────────────────────────────────
+Sugarcane: Perennial ratoon possible for 2-3 seasons
+Mango: Flowering Jan-Mar, harvest May-Aug
+Citrus: Kinnow harvest Dec-Feb; Oranges Nov-Jan; Malta Jan-Feb
+Banana: Year-round in Sindh
+Dates: Harvest Jul-Sep (Balochistan, South Punjab)
+
+VEGETABLE CALENDAR (Punjab)
+Tomato (autumn): Sep-Oct transplant, harvest Dec-Mar
+Tomato (spring): Jan-Feb transplant, harvest Apr-Jun
+Onion (Rabi): Oct sowing, Feb-Mar harvest
+Onion (Kharif): May-Jun sowing, Sep-Oct harvest
+Chilli: Mar-Apr transplant, Aug-Nov harvest
+Okra/Bhindi: Apr-Jun sowing, Jul-Oct harvest
+
+CROPPING INTENSITY
+Pakistan cropping intensity: 126% (world average ~100%)
+Key double-cropping systems in Punjab:
+  Rice-Wheat (Gujranwala belt)
+  Cotton-Wheat (central Punjab, Sindh)
+  Maize-Wheat (KPK, upper Punjab)
+  Sugarcane-Wheat (rarely — sugarcane usually takes full year)

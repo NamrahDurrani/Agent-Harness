@@ -1,0 +1,67 @@
+PAKISTAN IRRIGATION SYSTEM — Complete Guide
+Source: IRSA, Punjab Irrigation Department, PARC
+
+OVERVIEW — WORLD'S LARGEST CONTIGUOUS IRRIGATION SYSTEM
+Pakistan's Indus Basin Irrigation System (IBIS) is the world's largest integrated
+irrigation network:
+- 3 major storage reservoirs: Tarbela (13.7 MAF), Mangla (7.4 MAF), Chashma (0.87 MAF)
+- 19 barrages
+- 45 major canal systems
+- 107,000 watercourses
+- 1.6 million farm outlets (moghas)
+- Irrigates approximately 20 million hectares
+
+WATER DISTRIBUTION HIERARCHY
+Reservoir → Headworks/Barrage → Main Canal → Branch Canal → Distributary →
+Minor Canal → Watercourse → Farm Outlet (Mogha) → Field
+
+INDUS WATERS TREATY (1960)
+- Treaty between India and Pakistan signed 1960 (World Bank arbitration)
+- Pakistan allocated: Indus, Jhelum, Chenab rivers (Western rivers)
+- India allocated: Ravi, Beas, Sutlej rivers (Eastern rivers)
+- Pakistan receives ~145 MAF/year under the treaty
+- Current dispute: India's dam construction on western rivers
+
+WATER RIGHTS AND WARABANDI
+- Warabandi system: Rotational water distribution by turns (baari)
+- Each farmer gets water for fixed time proportional to farm area
+- One warabandi cycle: 7 days (168 hours)
+- Water flow rate: 1 cusec per 100 acres (benchmark)
+- Problem: Head farmers (near canal) get more; tail farmers get less
+
+ON-FARM WATER MANAGEMENT (OFWM) TECHNOLOGIES
+1. Land Leveling (Laser Leveling)
+   - Levels field to ±2 cm accuracy
+   - Water saving: 25-30%
+   - Yield increase: 10-15% (better germination uniformity)
+   - Cost: Rs 1,500-2,500/acre (subsidized by Punjab govt)
+
+2. Watercourse Lining
+   - Reduces seepage losses from 30-40% to 5%
+   - Reduces waterlogging in lower areas
+   - Government subsidizes 75% of cost
+
+3. Drip Irrigation
+   - Water saving: 40-50% vs flood irrigation
+   - Best for: Orchards, vegetables, sugar beet
+   - Cost: Rs 60,000-90,000/acre (initial investment)
+   - Punjab government subsidy: 60% for small farmers (<12.5 acres)
+
+4. Sprinkler Irrigation
+   - Water saving: 25-30% vs flood
+   - Best for: Uneven terrain, sandy soils, fodder crops
+   - Cost: Rs 25,000-40,000/acre
+
+GROUNDWATER
+- 700,000+ tube wells in Pakistan (mostly in Punjab)
+- Groundwater overexploitation in many areas — water table dropping 0.5-1m/year
+- Shallow water table areas: Waterlogging problem (South Punjab, Sindh)
+  Managed by SCARP (Salinity Control and Reclamation Project) drains + tube wells
+- Fresh groundwater zone (EC < 1.5 dS/m): Central Punjab
+- Brackish groundwater zone: Bahawalpur, Dera Ghazi Khan, Sindh
+
+WATER PRODUCTIVITY IN PAKISTAN (very low)
+- Wheat: 1.0-1.2 kg/m3 (world best = 2.0 kg/m3)
+- Rice: 0.3-0.5 kg/m3 (extremely low due to puddling + flooding)
+- Cotton: 0.6-0.8 kg/m3
+- Improvement path: Laser leveling + improved varieties + crop management
