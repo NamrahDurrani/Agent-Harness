@@ -1548,6 +1548,23 @@ os.makedirs(PDF_DIR, exist_ok=True)
 # ═══════════════════════════════════════════════════════════════════════════════
 app = FastAPI(title="Agentic RAG API")
 
+# Global exception handler to always return a valid JSON response even on
+# unexpected errors — prevents the frontend from failing to parse an empty
+# or HTML error page and shows a consistent structure for debugging.
+from fastapi.responses import JSONResponse as _JSONResponse
+
+@app.exception_handler(Exception)
+async def _global_exception_handler(request, exc):
+    try:
+        friendly = _friendly_error(exc)
+    except Exception:
+        friendly = f"❌ Backend error: {type(exc).__name__}: {exc}"
+    return _JSONResponse(status_code=500, content={
+        "response": friendly,
+        "trace": None,
+        "error_detail": str(exc),
+    })
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
