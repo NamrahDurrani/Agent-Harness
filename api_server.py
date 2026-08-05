@@ -2076,11 +2076,6 @@ def health():
                             content={"ok": False, "error": str(exc)})
 
 
-@app.get("/api/status")
-def status():
-    pass
-
-
 @app.get('/internal/env')
 def _internal_env():
     # Debug helper: returns whether GROQ_API_KEY is visible to the running process
@@ -2089,7 +2084,8 @@ def _internal_env():
 
 
 @app.get("/api/status")
-def status():    backend = os.environ.get("LLM_BACKEND", "groq").upper()
+def status():
+    backend = os.environ.get("LLM_BACKEND", "groq").upper()
     model_map = {
         "GROQ":        os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant"),
         "QWEN_REMOTE": os.environ.get("QWEN_REMOTE_MODEL", "Qwen (remote)"),
