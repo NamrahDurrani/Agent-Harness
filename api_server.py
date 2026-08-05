@@ -1801,7 +1801,8 @@ RETRYABLE_ERRORS = (ConnectionError, ConnectionResetError,
 
 
 def run_pipeline_with_retry(pipeline, session_id, query,
-                            upload_chunks=None, force_web=False, max_attempts=3):
+                            upload_chunks=None, upload_file_ids=None,
+                            force_web=False, max_attempts=3):
     last_exc = None
     for attempt in range(1, max_attempts + 1):
         try:
@@ -1809,6 +1810,7 @@ def run_pipeline_with_retry(pipeline, session_id, query,
                 session_id=session_id,
                 user_query=query,
                 upload_chunks=upload_chunks or [],
+                upload_file_ids=upload_file_ids or [],
                 force_web=force_web,
             )
         except RETRYABLE_ERRORS as exc:
@@ -1850,13 +1852,43 @@ def _execute_query(session_id: str,
 
     pipeline = get_pipeline()
 
-    # ── Gather upload chunks for this session ─────────────────────────────
-    upload_chunks: List[dict] = []
+    # ── Gather upload chunks + file_ids for this session ────────────────────
+    # FIX: previously only `upload_chunks` (freshly re-extracted from disk,
+    # on EVERY chat message) was ever passed to pipeline.run(). `upload_file_ids`
+    # was never passed, so rag_pipeline's Stage A — vector search over the
+    # properly embedded `user_uploads` ChromaDB collection built by
+    # _bg_index_user_file() — never ran. All chat answers about uploaded docs
+    # were falling back to a placeholder-scored BM25 pass over freshly
+    # re-extracted raw text, discarding the real embeddings entirely and
+    # re-running extraction (including Docling, if installed) on every message.
+    #
+    # Fix: look up this session's indexed file_ids from upload metadata and
+    # pass them through, so the real vector index gets queried. Only fall
+    # back to re-extracting from disk for files that are NOT YET indexed
+    # (still processing in the background) — that's the one case where the
+    # vector collection genuinely has nothing yet.
+    upload_chunks:   List[dict] = []
+    upload_file_ids: List[str] = []
     has_uploads = False
     session_file_paths = SESSION_FILES.get(session_id, [])
     print(f"  [SESSION_FILES] session={session_id!r} has {len(session_file_paths)} file(s) registered")
+
+    _uploads_meta = {u["file_path"]: u for u in _load_uploads()
+                      if u.get("session_id") == session_id}
+
     for fpath in session_file_paths:
-        if os.path.exists(fpath):
+        if not os.path.exists(fpath):
+            print(f"  [SESSION_FILES] WARNING: file no longer on disk: {fpath}")
+            continue
+
+        meta = _uploads_meta.get(fpath)
+        if meta and meta.get("status") == "indexed" and meta.get("file_id"):
+            upload_file_ids.append(meta["file_id"])
+            has_uploads = True
+        else:
+            # Not indexed yet (or metadata missing) — fall back to raw
+            # extraction so the user isn't left without an answer while
+            # background indexing is still running.
             try:
                 chunks = build_upload_chunks(fpath)
                 upload_chunks.extend(chunks)
@@ -1864,12 +1896,11 @@ def _execute_query(session_id: str,
                     has_uploads = True
             except Exception as e:
                 print(f"  [SESSION_FILES] Could not load '{fpath}': {e}")
-        else:
-            print(f"  [SESSION_FILES] WARNING: file no longer on disk: {fpath}")
 
     response = run_pipeline_with_retry(
         pipeline, session_id, query,
         upload_chunks=upload_chunks,
+        upload_file_ids=upload_file_ids,
         force_web=force_web,
     )
 
@@ -3005,7 +3036,15 @@ if os.path.isdir(DIST):
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+try:
+    from agent_harness import router as agent_harness_router
+    app.include_router(agent_harness_router)
+    print("[HARNESS] agent_harness.router included")
+except Exception as e:
+    print(f"[HARNESS] agent_harness router failed to import: {e}")
+
 if __name__ == "__main__":
+
     import uvicorn
 
     print("\n" + "="*60)

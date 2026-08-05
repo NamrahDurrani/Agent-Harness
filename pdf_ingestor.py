@@ -14,26 +14,21 @@ Why PyMuPDF + pytesseract?
 - FAO Guidelines PDF has 16 fonts → direct text extraction works fine
 """
 
-print("A")
 import os
-print("B")
 import io
-print("C")
 import re
-print("D")
 import fitz
-print("E")
 import pytesseract
-print("F")
 from PIL import Image
-print("G")
 from typing import List, Tuple
-print("H")
+# Note: using PyMuPDF (fitz) for direct text extraction; pytesseract (Tesseract) for OCR fallback
 
 
 # ── Chunking parameters ───────────────────────────────────────────────────────
-CHUNK_SIZE   = 400   # target characters per chunk
-CHUNK_OVERLAP = 80   # overlap to preserve context at boundaries
+# Increased chunk size to produce more semantically-complete passages
+# while keeping overlap large enough to preserve context across boundaries.
+CHUNK_SIZE   = 800   # target characters per chunk
+CHUNK_OVERLAP = 200  # overlap to preserve context at boundaries
 
 
 def _extract_text_direct(page: fitz.Page) -> str:
@@ -81,9 +76,10 @@ def _chunk_text(
     if not text:
         return []
 
-    # Split on paragraph or sentence boundaries first
-    # Prefer splitting at double-newlines, then single newlines, then periods
-    sentences = re.split(r"(\n\n|\.\s+|\n)", text)
+    # Split on paragraph or sentence boundaries first.
+    # Prefer splitting at double-newlines (paragraphs) or after sentence-ending punctuation.
+    # Use a lookbehind to split after . ? or ! followed by whitespace, or on paragraph breaks.
+    sentences = re.split(r'(\n{2,}|(?<=[\.!?])\s+)', text)
     sentences = [s.strip() for s in sentences if s.strip()]
 
     chunks = []
@@ -166,7 +162,8 @@ def ingest_pdf(
               f"(direct:{direct_pages} pages, ocr:{ocr_pages} pages)")
 
     # Filter out very short or empty chunks (OCR noise)
-    all_chunks = [(c, s, p) for c, s, p in all_chunks if len(c.strip()) > 40]
+    # Raise threshold to reduce spurious OCR fragments while keeping useful content
+    all_chunks = [(c, s, p) for c, s, p in all_chunks if len(c.strip()) > 80]
     if verbose:
         print(f"  [INGEST] After filtering: {len(all_chunks)} quality chunks")
 

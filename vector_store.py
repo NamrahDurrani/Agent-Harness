@@ -1,18 +1,27 @@
 """
-Vector Store Module
-===================
-Uses ChromaDB (local, persistent) with TF-IDF embeddings (100% offline).
+vector_store.py
+===============
+ChromaDB vector store for Agentic RAG Platform.
 
-Why TF-IDF instead of sentence-transformers?
-- sentence-transformers requires downloading from HuggingFace (may be blocked)
-- TF-IDF is fully local (sklearn), no downloads needed
-- For agricultural domain text with specific terminology, TF-IDF + BM25
-  actually works very well — specific crop/disease terms have high IDF scores
-- When HuggingFace access is available, swap TFIDFEmbeddingFunction for
-  the sentence-transformers version (see commented code at bottom)
+Embedding model: BAAI/bge-m3  (upgraded from all-MiniLM-L6-v2)
+  - Multilingual: handles English, Urdu, Roman-Urdu, domain terminology
+  - 1024-dim dense vectors — much stronger retrieval than MiniLM 384-dim
+  - HuggingFace: https://huggingface.co/BAAI/bge-m3
+  - First run downloads ~570MB, then cached locally — no re-download
 
-Note: The vectorizer is fit on the first batch of documents, then saved
-to disk so subsequent queries use the same vocabulary.
+IMPORTANT: Switching embedding models requires a full re-index.
+  Run:  python vector_store.py --reset
+  Then: python build_pakistan_agri_kb.py
+
+API surface (unchanged — fully backward-compatible):
+  EMBEDDING_MODEL        str
+  _get_client()          → chromadb.PersistentClient
+  _get_ef()              → embedding function
+  _get_collection()      → chromadb.Collection  (COLLECTION_NAME)
+  collection_size()      → int
+  similarity_search()    → List[dict]  keys: chunk_text, source_file, page_num, vector_score, doc_id
+  index_chunks()         → int  (accepts List[dict] OR List[Tuple[str,str,int]])
+  reset_collection()     → None
 """
 
 import os
@@ -22,86 +31,63 @@ from typing import List, Dict, Any, Tuple, Union
 
 import chromadb
 from chromadb import EmbeddingFunction, Documents, Embeddings
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import normalize
+from chromadb.utils import embedding_functions
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-BASE_DIR        = os.path.dirname(__file__)
+# ── Config ─────────────────────────────────────────────────────────────────────
+BASE_DIR = (
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if os.path.basename(os.path.dirname(os.path.abspath(__file__))) == "src"
+    else os.path.dirname(os.path.abspath(__file__))
+)
+
 CHROMA_DIR      = os.path.join(BASE_DIR, "chroma_db")
-VECTORIZER_PATH = os.path.join(BASE_DIR, "tfidf_vectorizer.pkl")
-COLLECTION_NAME = "agriculture_docs"
-TFIDF_DIM       = 2048   # vocabulary size for TF-IDF features
+COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION", "agriculture_docs")
 
-# ── Singleton instances ───────────────────────────────────────────────────────
-_client:     chromadb.PersistentClient = None
-_collection  = None
-_ef:         "TFIDFEmbeddingFunction" = None
+# ── Embedding model ─────────────────────────────────────────────────────────────
+# BAAI/bge-m3 — requested explicitly. 2.27 GB download, needs 3+ GB free
+# disk space (check with: Get-PSDrive C  on Windows).
+#   - 1024-dim vectors, state-of-the-art multilingual retrieval quality
+#   - Multilingual: handles English, Urdu, Roman-Urdu, domain terms
+#   - No API key required — runs fully offline after first download
+#
+# If you hit disk-space errors again, override without editing code:
+#   $env:EMBEDDING_MODEL = "intfloat/multilingual-e5-base"   # 278 MB fallback
+#
+# To use HuggingFace API (cloud) instead of local model:
+#   NOT RECOMMENDED — adds latency, costs money, needs internet for every query.
+#   For this project, local models are always better.
+
+EMBEDDING_MODEL = os.environ.get(
+    "EMBEDDING_MODEL",
+    "BAAI/bge-m3"   # 2.27 GB, best multilingual quality, needs disk space
+)
+
+# ── Singletons ─────────────────────────────────────────────────────────────────
+_client: chromadb.PersistentClient = None
+_collection = None
+_ef = None
 
 
-# ── Custom embedding function (offline TF-IDF) ────────────────────────────────
+# ── Embedding function ─────────────────────────────────────────────────────────
 
-class TFIDFEmbeddingFunction(EmbeddingFunction):
+def _get_ef():
     """
-    ChromaDB-compatible embedding function using TF-IDF.
-    Fitted lazily on first use and persisted to disk.
+    Local SentenceTransformer embedding using intfloat/multilingual-e5-base.
+    Runs fully offline after first download — no API key ever needed.
+    Download size: ~278 MB (cached in huggingface hub cache after first run).
+    Override model with env var: EMBEDDING_MODEL=<model-name>
+    Requires:  pip install sentence-transformers
     """
-
-    def __init__(self, dim: int = TFIDF_DIM, vectorizer_path: str = VECTORIZER_PATH):
-        self.dim = dim
-        self.vectorizer_path = vectorizer_path
-        self.vectorizer: TfidfVectorizer = None
-        self._load_or_init()
-
-    def _load_or_init(self):
-        if os.path.exists(self.vectorizer_path):
-            with open(self.vectorizer_path, "rb") as f:
-                self.vectorizer = pickle.load(f)
-            print(f"[VECTOR] Loaded TF-IDF vectorizer "
-                  f"(vocab={len(self.vectorizer.vocabulary_)})")
-        else:
-            self.vectorizer = TfidfVectorizer(
-                max_features=self.dim,
-                ngram_range=(1, 2),   # unigrams + bigrams
-                sublinear_tf=True,    # log normalization of TF
-                min_df=1,
-                strip_accents="unicode",
-                analyzer="word",
-            )
-            print("[VECTOR] New TF-IDF vectorizer (will fit on first batch)")
-
-    def fit(self, texts: List[str]):
-        """Fit the vectorizer on a corpus of texts and save to disk."""
-        self.vectorizer.fit(texts)
-        with open(self.vectorizer_path, "wb") as f:
-            pickle.dump(self.vectorizer, f)
-        print(f"[VECTOR] TF-IDF vectorizer fitted and saved "
-              f"(vocab={len(self.vectorizer.vocabulary_)})")
-
-    def is_fitted(self) -> bool:
-        return hasattr(self.vectorizer, "vocabulary_")
-
-    def transform(self, texts: List[str]) -> np.ndarray:
-        """Transform texts to L2-normalized TF-IDF vectors."""
-        if not self.is_fitted():
-            raise RuntimeError("Vectorizer not fitted. Call fit() first.")
-        matrix = self.vectorizer.transform(texts).toarray().astype(np.float32)
-        return normalize(matrix, norm="l2")
-
-    def __call__(self, input: Documents) -> Embeddings:
-        """ChromaDB calls this during add() and query()."""
-        if not self.is_fitted():
-            # Auto-fit on the first batch (happens during indexing)
-            self.fit(input)
-        return self.transform(list(input)).tolist()
-
-
-# ── Client / collection init ──────────────────────────────────────────────────
-
-def _get_ef() -> TFIDFEmbeddingFunction:
     global _ef
-
     if _ef is None:
-        _ef = TFIDFEmbeddingFunction()
+        size_hint = "~278 MB" if "e5-base" in EMBEDDING_MODEL else "~117 MB" if "e5-small" in EMBEDDING_MODEL else "varies"
+        print(f"[VECTOR] Loading '{EMBEDDING_MODEL}' locally "
+              f"(first download {size_hint}, then instant from cache)...")
+        _ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=EMBEDDING_MODEL,
+            device="cpu",
+        )
+        print("[VECTOR] Embedding model ready.")
     return _ef
 
 
@@ -115,6 +101,7 @@ def _get_client() -> chromadb.PersistentClient:
 
 
 def _get_collection():
+    """Return (or create) the main ChromaDB collection with bge-m3 embeddings."""
     global _collection
     if _collection is None:
         client = _get_client()
@@ -144,31 +131,16 @@ def index_chunks(
     verbose: bool = True,
 ) -> int:
     """
-    Add text chunks to ChromaDB.
+    Add chunks to ChromaDB. Accepts two formats:
 
-    Strategy:
-      1. Collect ALL texts first and fit the TF-IDF vectorizer on them
-         (so it sees the full vocabulary before any insertions).
-      2. Then insert in batches.
+    Format A (dict, from build_pakistan_agri_kb.py and rag_pipeline.py):
+        [{"chunk_text": str, "source_file": str, "page_num": int, ...}, ...]
 
-    Args:
-        chunks:     List of (chunk_text, source_file, page_num).
-        batch_size: Insert this many at a time.
-        verbose:    Print progress.
+    Format B (tuple, legacy):
+        [(chunk_text, source_file, page_num), ...]
 
-    Returns:
-        Number of chunks added.
+    Returns number of chunks successfully indexed.
     """
-    import uuid
-
-    ef = _get_ef()
-    all_texts = [text for text, _, _ in chunks]
-
-    # Step 1: Fit TF-IDF on the full corpus (if not already fitted)
-    if not ef.is_fitted():
-        print(f"[VECTOR] Fitting TF-IDF on {len(all_texts)} texts...")
-        ef.fit(all_texts)
-
     collection = _get_collection()
 
     # Normalise to list of dicts
@@ -260,18 +232,20 @@ def similarity_search(
 
 
 def reset_collection():
-    """Delete and recreate the collection."""
+    """
+    Delete and recreate the collection.
+    Required when switching embedding models — vectors from different
+    embedding spaces cannot coexist in the same collection.
+
+    After reset, re-run build_pakistan_agri_kb.py to re-index.
+    """
+    global _collection, _ef
     client = _get_client()
     try:
         client.delete_collection(COLLECTION_NAME)
         print(f"[VECTOR] Deleted collection '{COLLECTION_NAME}'")
     except Exception:
         pass
-    # Also delete fitted vectorizer so it re-fits on new data
-    if os.path.exists(VECTORIZER_PATH):
-        os.remove(VECTORIZER_PATH)
-        print("[VECTOR] Deleted TF-IDF vectorizer")
-    global _collection, _ef
     _collection = None
     _ef = None
     print("[VECTOR] Collection reset. Re-run build_pakistan_agri_kb.py to re-index with bge-m3.")
@@ -279,23 +253,15 @@ def reset_collection():
 
 # ── CLI helper ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("Collection size:", collection_size())
-    if collection_size() > 0:
-        results = similarity_search("wheat rust disease monitoring", top_k=3)
-        for r in results:
-            print(f"\n[{r['source_file']} p.{r['page_num']}] "
-                  f"score={r['vector_score']}")
-            print(r["chunk_text"][:200])
-
-# ── NOTE: To use sentence-transformers when HF is accessible ─────────────────
-# Replace the collection init with:
-#
-# from chromadb.utils import embedding_functions
-# ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-#     model_name="all-MiniLM-L6-v2"
-# )
-# _collection = client.get_or_create_collection(
-#     name=COLLECTION_NAME,
-#     embedding_function=ef,
-#     metadata={"hnsw:space": "cosine"},
-# )
+    if "--reset" in sys.argv:
+        reset_collection()
+    else:
+        print(f"Embedding model : {EMBEDDING_MODEL}")
+        print(f"Collection name : {COLLECTION_NAME}")
+        print(f"Collection size : {collection_size()} chunks")
+        if collection_size() > 0:
+            print("\nSample search: 'wheat rust disease Punjab'")
+            results = similarity_search("wheat rust disease Punjab", top_k=3)
+            for r in results:
+                print(f"\n  [{r['source_file']} p.{r['page_num']}] score={r['vector_score']}")
+                print(f"  {r['chunk_text'][:200]}...")

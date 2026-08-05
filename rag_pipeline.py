@@ -587,17 +587,47 @@ def _extract_text_from_path(filepath: str) -> str:
     except Exception:
         pass
 
-    # ── 2. PyMuPDF for PDFs ──────────────────────────────────────────────────
+    # ── 2. PyMuPDF for PDFs, with OCR fallback for scanned pages ─────────────
+    # FIX: uploaded PDFs with 0 embedded fonts (scanned documents — the same
+    # kind pdf_ingestor.py already OCRs for the main knowledge base, e.g. the
+    # PARC report) returned empty/near-empty text here, so build_upload_chunks()
+    # silently produced no chunks and the uploaded file was never usable in
+    # chat. This mirrors pdf_ingestor.py's OCR fallback for the upload path.
     if ext == ".pdf":
         try:
             import fitz
             doc   = fitz.open(filepath)
             pages = [page.get_text() for page in doc]
-            doc.close()
             text  = "\n\n".join(pages)
-            if text.strip():
-                print(f"  [UPLOAD] PyMuPDF: {len(text)} chars")
-                return text
+
+            # Heuristic: a real text-layer PDF averages well over ~40 chars/page.
+            # Well under that (or fully empty) means it's scanned — OCR it.
+            avg_chars_per_page = len(text.strip()) / max(len(doc), 1)
+            if avg_chars_per_page < 40:
+                print(f"  [UPLOAD] PyMuPDF returned {avg_chars_per_page:.0f} chars/page "
+                      f"— looks scanned, falling back to OCR")
+                try:
+                    import pytesseract
+                    from PIL import Image
+                    ocr_pages = []
+                    for page in doc:
+                        mat = fitz.Matrix(2.5, 2.5)  # ~180 DPI
+                        pix = page.get_pixmap(matrix=mat)
+                        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                        ocr_pages.append(pytesseract.image_to_string(img, config="--psm 6"))
+                    ocr_text = "\n\n".join(ocr_pages)
+                    doc.close()
+                    if ocr_text.strip():
+                        print(f"  [UPLOAD] OCR: {len(ocr_text)} chars from {os.path.basename(filepath)}")
+                        return ocr_text
+                except Exception as ocr_err:
+                    print(f"  [UPLOAD] OCR fallback failed: {ocr_err}")
+                    doc.close()
+            else:
+                doc.close()
+                if text.strip():
+                    print(f"  [UPLOAD] PyMuPDF: {len(text)} chars")
+                    return text
         except Exception as e:
             print(f"  [UPLOAD] PyMuPDF failed: {e}")
 
@@ -631,31 +661,88 @@ def build_upload_chunks(filepath: str, source_label: str = None) -> List[Dict]:
     """
     Extract text from an uploaded file and return RAG-ready chunk dicts
     that merge with ChromaDB results for RRF ranking.
+    Preserves page numbers for PDFs so retrieved sources reference pages.
     Called from api_server.py after a file is saved to disk.
     """
     if not source_label:
         source_label = os.path.basename(filepath)
 
-    text = _extract_text_from_path(filepath)
-    if not text:
-        print(f"  [UPLOAD] No text extracted — file may be empty or unsupported: {filepath}")
-        return []
-
-    raw_chunks = _chunk_text_simple(text)
+    ext = os.path.splitext(filepath)[1].lower()
     chunks = []
-    for i, chunk in enumerate(raw_chunks):
-        chunks.append({
-            "chunk_text":   chunk,
-            "source_file":  source_label,
-            "page_num":     i,
-            "vector_score": 0.5,
-            "bm25_score":   None,
-            "rrf_score":    None,
-            "final_rank":   None,
-            "from_upload":  True,
-        })
-    print(f"  [UPLOAD] {len(chunks)} chunks ready from '{source_label}'")
-    return chunks
+
+    try:
+        if ext == ".pdf":
+            # Per-page extraction with OCR fallback for scanned pages
+            try:
+                import fitz
+                from PIL import Image
+                import pytesseract
+                doc = fitz.open(filepath)
+            except Exception as e:
+                print(f"  [UPLOAD] PDF open failed: {e}")
+                return []
+
+            for pnum in range(len(doc)):
+                page = doc[pnum]
+                page_text = page.get_text("text") or ""
+                if len(page_text.strip()) < 40:
+                    # scanned page — OCR fallback
+                    try:
+                        mat = fitz.Matrix(2.0, 2.0)
+                        pix = page.get_pixmap(matrix=mat)
+                        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                        ocr_text = pytesseract.image_to_string(img, config="--psm 6")
+                        text = ocr_text
+                        # debug note
+                        # print(f"  [UPLOAD] OCR page {pnum+1}: {len(text)} chars")
+                    except Exception as oe:
+                        print(f"  [UPLOAD] OCR failed on page {pnum+1}: {oe}")
+                        text = page_text
+                else:
+                    text = page_text
+
+                if not text or not text.strip():
+                    continue
+
+                page_chunks = _chunk_text_simple(text, chunk_size=800, overlap=200)
+                for i, pc in enumerate(page_chunks):
+                    chunks.append({
+                        "chunk_text":  pc,
+                        "source_file": source_label,
+                        "page_num":    pnum + 1,
+                        "vector_score": 0.5,
+                        "bm25_score":  None,
+                        "rrf_score":   None,
+                        "final_rank":  None,
+                        "from_upload": True,
+                    })
+            doc.close()
+
+        else:
+            # Non-PDF files: use the generic text extractor and chunking
+            text = _extract_text_from_path(filepath)
+            if not text:
+                print(f"  [UPLOAD] No text extracted — file may be empty or unsupported: {filepath}")
+                return []
+            raw_chunks = _chunk_text_simple(text, chunk_size=800, overlap=200)
+            for i, chunk in enumerate(raw_chunks, 1):
+                chunks.append({
+                    "chunk_text":   chunk,
+                    "source_file":  source_label,
+                    "page_num":     i,
+                    "vector_score": 0.5,
+                    "bm25_score":   None,
+                    "rrf_score":    None,
+                    "final_rank":   None,
+                    "from_upload":  True,
+                })
+
+        print(f"  [UPLOAD] {len(chunks)} chunks ready from '{source_label}'")
+        return chunks
+
+    except Exception as e:
+        print(f"  [UPLOAD] ERROR: Could not extract text from {filepath}: {e}")
+        return []
 
 
 # ══════════════════════════════════════════════════════════════════════════════

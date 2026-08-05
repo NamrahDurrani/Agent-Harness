@@ -375,6 +375,17 @@ body {
   color: #aaa;
   text-align: center;
 }
+
+/* ── RECOMMENDATIONS HIGHLIGHT ── */
+.recommendation {
+  background: linear-gradient(90deg, rgba(250,249,240,1) 0%, rgba(241,250,233,1) 100%);
+  border-left: 4px solid var(--amber);
+  padding: 10px 12px;
+  margin: 10px 0 18px 0;
+  border-radius: 6px;
+  font-size: 10pt;
+}
+.recommendation strong { color: var(--amber); }
 """
 
 
@@ -615,6 +626,23 @@ def _build_html(data: dict, session_id: str) -> str:
   <div class="msg-ts">{_esc(resp_ts)}</div>
 """)
         parts.append("</div>\n")
+
+    # ── RECOMMENDATIONS EXTRACTION (optional) ─────────────────────────────────
+    recs = []
+    try:
+        for msg in messages:
+            resp_text = (msg.get("final_response") or "")
+            if resp_text and re.search(r"\b(recommend|suggest|advis)\w*", resp_text, flags=re.I):
+                # take the first 300 chars as the recommendation snippet
+                snip = resp_text.strip().replace('\n', ' ')[:600]
+                recs.append(snip)
+    except Exception:
+        recs = []
+
+    if recs:
+        parts.append('<div class="section-header amber">Key Recommendations</div>\n')
+        for r in recs:
+            parts.append(f'<div class="recommendation"><strong>Recommendation:</strong> {_esc(r)}</div>\n')
 
     # ── SOURCES CITED ─────────────────────────────────────────────────────────
     if all_sources:
