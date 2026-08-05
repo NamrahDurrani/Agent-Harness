@@ -1472,6 +1472,15 @@ import requests as _requests
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Ensure stdout/stderr use UTF-8 where possible (prevents UnicodeEncodeError on Windows
+# when code prints emoji or other non-encodable characters). This is a surgical runtime fix
+# that avoids crashing the entire process on startup due to print() of warnings containing emoji.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 import db_schema
 import vector_store
 from rag_pipeline import AgenticRAGPipeline, inspect_last_query as _inspect
