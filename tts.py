@@ -59,30 +59,83 @@ def _get_mms(lang: str):
     """
     Lazy-load and cache the MMS model+tokenizer for a language.
     lang: "en" | "ur"
+
+    If MMS model loading fails (missing model id, HF access blocked, or
+    disk-space issues), fall back to a lightweight network-backed gTTS
+    approach (gTTS is used only as a fallback here). The fallback path
+    avoids raising at import-time so the server stays up and the /api/tts
+    endpoint can still produce audio.
     """
     if lang not in _models:
         model_name = _MMS_ENG_MODEL if lang == "en" else _MMS_URD_MODEL
-        print(f"[TTS] Loading MMS-TTS '{model_name}' ({lang}) "
-              f"— first run downloads ~150MB, then cached...")
-        from transformers import VitsModel, AutoTokenizer
-        model     = VitsModel.from_pretrained(model_name)
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model.eval()
-        _models[lang] = (model, tokenizer)
-        print(f"[TTS] MMS-TTS '{lang}' ready.")
+        try:
+            print(f"[TTS] Loading MMS-TTS '{model_name}' ({lang}) "
+                  f"— first run downloads ~150MB, then cached...")
+            from transformers import VitsModel, AutoTokenizer
+            model = VitsModel.from_pretrained(model_name)
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model.eval()
+            _models[lang] = (model, tokenizer)
+            print(f"[TTS] MMS-TTS '{lang}' ready.")
+        except Exception as e:
+            # Soft-fail: record a fallback marker instead of raising so the
+            # FastAPI server continues to operate. The fallback uses gTTS
+            # (Google Text-to-Speech) which supports many languages incl. Urdu.
+            print(f"[TTS] MMS model load failed for '{model_name}' ({lang}): {e}\n"
+                  "       Falling back to gTTS-based synthesis for this language.")
+            _models[lang] = ("gtts_fallback", model_name)
     return _models[lang]
 
 
 def _synthesize(text: str, lang: str) -> Tuple[np.ndarray, int]:
-    """Returns (audio_array, sample_rate) for the given language."""
-    import torch
-    model, tokenizer = _get_mms(lang)
-    inputs = tokenizer(text, return_tensors="pt")
-    with torch.no_grad():
-        output = model(**inputs).waveform
-    audio = output.squeeze().cpu().numpy()
-    sample_rate = model.config.sampling_rate
-    return audio, sample_rate
+    """Returns (audio_array, sample_rate) for the given language.
+
+    If MMS is available the function returns a numpy array + sampling rate.
+    If MMS failed to load, uses gTTS as fallback and converts the resulting
+    MP3 into a WAV numpy array using pydub (if available). If pydub/ffmpeg
+    are not available, returns MP3 bytes instead (caller must handle mime).
+    """
+    # If MMS is available, use it (preferred path)
+    model_entry = _models.get(lang)
+    if model_entry and model_entry[0] != "gtts_fallback":
+        import torch
+        model, tokenizer = model_entry
+        inputs = tokenizer(text, return_tensors="pt")
+        with torch.no_grad():
+            output = model(**inputs).waveform
+        audio = output.squeeze().cpu().numpy()
+        sample_rate = model.config.sampling_rate
+        return audio, sample_rate
+
+    # Fallback: use gTTS to synthesize into MP3 bytes, then convert to WAV
+    try:
+        from gtts import gTTS
+    except Exception as e:
+        raise RuntimeError(f"gTTS not available for fallback TTS: {e}")
+
+    # language code mapping for gTTS (gTTS uses 'ur' for Urdu, 'en' for English)
+    gtts_lang = "ur" if lang == "ur" else "en"
+    tts = gTTS(text, lang=gtts_lang)
+    mp3_buf = io.BytesIO()
+    tts.write_to_fp(mp3_buf)
+    mp3_buf.seek(0)
+
+    # Try to convert MP3 -> WAV in-memory using pydub (requires ffmpeg)
+    try:
+        from pydub import AudioSegment
+        audio_seg = AudioSegment.from_file(mp3_buf, format="mp3")
+        wav_buf = io.BytesIO()
+        audio_seg.export(wav_buf, format="wav")
+        wav_buf.seek(0)
+        import soundfile as sf
+        data, sr = sf.read(wav_buf)
+        # Ensure numpy float32
+        audio = np.array(data, dtype=np.float32)
+        return audio, sr
+    except Exception as e:
+        # If conversion fails, surface a clear error so the API can return an
+        # informative HTTP 500, or the caller may accept MP3 bytes directly.
+        raise RuntimeError(f"Fallback gTTS synthesis succeeded but conversion to WAV failed: {e}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -172,6 +225,9 @@ class TTSService:
         else:
             raise ValueError(f"Unsupported language: {language!r}. "
                              f"Use 'en', 'ur', 'roman_ur', or 'mixed'.")
+
+        # Ensure the MMS model is loaded for this language before synthesis.
+        _get_mms(lang)
 
         chunks = _split_long_text(clean_text)
         audio_parts = []

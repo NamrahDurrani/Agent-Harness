@@ -81,17 +81,35 @@ from rank_bm25 import BM25Okapi
 from groq import Groq
 import db_schema
 import vector_store
+import claim_verification  # Phase 8 — claim-level hallucination/evidence gate
 
 # ── Multilingual text layer (Stage 1: text-only Urdu/English support) ──────
 # Graceful import: if language_layer.py or its dependencies (transformers,
 # torch) aren't installed yet, the pipeline runs exactly as before —
 # English-only — with a one-time startup notice instead of crashing.
+#
+# NOTE: only detect_language is imported from language_layer.py now.
+# translate_to_english/translate_from_english were dropped in favor of
+# _translate_query_to_english/_translate_answer_to_language below — direct
+# Groq calls via the same self.llm client already used everywhere else in
+# this pipeline, instead of language_layer.py's own translation path,
+# which was silently returning empty strings (confirmed via [LANG]
+# debug logging: no exception, no output) rather than raising — the
+# "detect language, then have the LLM handle it directly" approach this
+# project already settled on for other reasons (see project notes on
+# dropping NLLB) turns out to also be the fix for that reliability bug.
 try:
-    from language_layer import detect_language, translate_to_english, translate_from_english
+    from language_layer import detect_language
     _LANG_LAYER_AVAILABLE = True
 except ImportError as e:
     _LANG_LAYER_AVAILABLE = False
     print(f"[PIPELINE] language_layer.py not available — English-only mode. ({e})")
+
+_LANG_NAMES = {
+    "ur":       "Urdu, written in the Urdu/Perso-Arabic script",
+    "roman_ur": "Roman Urdu — the Urdu language written using the plain Latin/English alphabet, NOT Urdu script",
+    "mixed":    "the same mixed Urdu/English style the question was written in",
+}
 
 # ── MCP tools (graceful fallback if not installed) ───────────────────────────
 try:
@@ -136,7 +154,14 @@ elif LLM_BACKEND == "qwen_remote":
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 # FIX 1: upgraded model; override via GROQ_MODEL env var
-GROQ_MODEL   = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL   = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+# Lightweight model for utility calls (query rewriting, orchestration,
+# relevance evaluation) — these are small classification/rewrite tasks
+# that don't need the full 70B model's quality, and running them on a
+# separate model gives them their own daily token quota on Groq's side
+# instead of competing with the two answer-generation calls for the
+# same 100k TPD budget. Override via GROQ_LIGHT_MODEL if needed.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 TOP_K_VECTOR = 10
 TOP_K_BM25   = 10
@@ -234,7 +259,7 @@ def _log_response(query_id, final_response, used_rag, retry_count):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class LLMClient:
-    """Default Groq backend (Llama-3.3-70B)."""
+    """Default Groq backend (openai/gpt-oss-20b, or a lighter model per-call)."""
 
     def __init__(self):
         api_key = os.environ.get("GROQ_API_KEY", "")
@@ -245,16 +270,19 @@ class LLMClient:
         
         self.client = Groq(api_key=api_key)
 
-    def call(self, system_prompt, user_prompt, max_tokens=512, temperature=0.1):
-        response = self.client.chat.completions.create(
-            model=GROQ_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_prompt},
-            ],
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
+    def call(self, system_prompt, user_prompt, max_tokens=512, temperature=0.1, model=None):
+        try:
+            response = self.client.chat.completions.create(
+                model=model or GROQ_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": user_prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        except Exception as e:
+            raise RuntimeError(_friendly_llm_error(e)) from e
         text  = response.choices[0].message.content.strip()
         usage = {
             "prompt_tokens":     response.usage.prompt_tokens,
@@ -262,6 +290,42 @@ class LLMClient:
             "total_tokens":      response.usage.total_tokens,
         }
         return text, usage
+
+
+def _friendly_llm_error(e: Exception) -> str:
+    """
+    Turns a raw Groq API error (often a multi-line JSON dump — status
+    code, org ID, service tier, exact token counts) into one clean
+    sentence a user can actually act on, instead of a wall of text that
+    reads like a stack trace. Falls back to the original message for any
+    error shape this doesn't specifically recognize, so nothing is ever
+    silently swallowed — just made readable.
+    """
+    msg = str(e)
+    if "429" in msg or "rate limit" in msg.lower() or "rate_limit" in msg.lower():
+        wait_match = re.search(r'try again in\s+([\d.]+)([ms])', msg, re.IGNORECASE)
+        if wait_match:
+            value, unit = wait_match.groups()
+            seconds = float(value) * (60 if unit == "m" else 1)
+            if seconds >= 60:
+                wait_str = f"about {int(seconds // 60)} minute(s)"
+            else:
+                wait_str = f"about {int(seconds)} second(s)"
+            return (
+                f"AgriBot has reached today's usage limit for this model. "
+                f"Please try again in {wait_str}, or ask your admin to "
+                f"upgrade the Groq plan for a higher daily limit."
+            )
+        return (
+            "AgriBot has reached today's usage limit for this model. "
+            "Please try again later, or ask your admin to upgrade the "
+            "Groq plan for a higher daily limit."
+        )
+    if "401" in msg or "invalid api key" in msg.lower() or "authentication" in msg.lower():
+        return "AgriBot's AI backend is misconfigured (invalid API key) — please contact your admin."
+    if "timeout" in msg.lower() or "timed out" in msg.lower():
+        return "AgriBot's AI backend took too long to respond. Please try again."
+    return f"AgriBot's AI backend returned an error: {msg[:200]}"
 
 
 class XAIClient:
@@ -442,6 +506,13 @@ def _build_sources_from_docs(docs: List[Dict]) -> List[Dict]:
             "is_upload":   bool(doc.get("from_upload")),
             "url":         "",
             "keywords":    _top_keywords(doc.get("chunk_text", "")),
+            # NEW — text excerpt (not just top keywords) so
+            # claim_verification.py can actually check whether this
+            # source's text supports a claim, not just whether it shares
+            # vocabulary with it. Additive field; existing consumers of
+            # this dict (frontend, _inject_inline_citations) ignore
+            # unknown keys, so nothing else changes.
+            "snippet":     doc.get("chunk_text", "")[:600],
         })
     return sources
 
@@ -459,6 +530,8 @@ def _build_sources_from_web(results: List[Dict]) -> List[Dict]:
             "is_upload":   False,
             "url":         r.get("url", ""),
             "keywords":    _top_keywords(combined_text),
+            # NEW — see matching comment in _build_sources_from_docs above.
+            "snippet":     combined_text[:600],
         })
     return sources
 
@@ -474,6 +547,15 @@ def _inject_inline_citations(answer: str, sources: List[Dict]) -> str:
     answer = re.sub(r'\n*\*\*Web sources.*?\*\*[\s\S]*$', '', answer, flags=re.IGNORECASE).strip()
     answer = re.sub(r'[\(\[]\s*Source:[^\)\]]*[\)\]]', '', answer, flags=re.IGNORECASE).strip()
     answer = re.sub(r'\(?\bpage\s+\d+\)?',             '', answer, flags=re.IGNORECASE).strip()
+    # Strip any literal "[Web N]" tags the LLM wrote itself despite the
+    # prompt no longer asking for them — defense in depth, since models
+    # don't always drop an instruction cleanly on the first try. Without
+    # this, raw "[Web 2]" text leaks through unstyled (the frontend only
+    # renders plain "[N]" as a citation badge) sitting right next to the
+    # correctly-rendered [N] badge this function adds below — a visibly
+    # doubled-up citation mess.
+    answer = re.sub(r'\s*\[\s*[Ww]eb\s*\d+\s*\]', '', answer).strip()
+    answer = re.sub(r'\s{2,}', ' ', answer)
 
     if not sources:
         return answer
@@ -489,7 +571,10 @@ def _inject_inline_citations(answer: str, sources: List[Dict]) -> str:
                 hits.append((matches, src["num"]))
         if hits:
             hits.sort(reverse=True)
-            tags = "".join(f"[{num}]" for _, num in hits[:2])
+            # Cap to 1 tag per sentence — 2 stacked tags like "[1][6]" reads
+            # as clutter, and the top keyword-match is almost always the
+            # right one anyway.
+            tags = f"[{hits[0][1]}]"
             annotated.append(sent + tags)
         else:
             annotated.append(sent)
@@ -765,14 +850,20 @@ class PipelineResult:
         is_upload  bool  — True if from session-uploaded file
         url        str   — clickable URL if web source, else ""
     """
-    __slots__ = ("answer", "sources", "used_rag", "retry_count", "source_type")
+    __slots__ = ("answer", "sources", "used_rag", "retry_count", "source_type", "verification")
 
-    def __init__(self, answer, sources, used_rag=True, retry_count=0, source_type="RAG"):
+    def __init__(self, answer, sources, used_rag=True, retry_count=0, source_type="RAG", verification=None):
         self.answer       = answer
         self.sources      = sources
         self.used_rag     = used_rag
         self.retry_count  = retry_count
-        self.source_type  = source_type  # "RAG" | "MCP" | "WEB" | "DIRECT"
+        self.source_type  = source_type  # "RAG" | "MCP" | "WEB" | "DIRECT" | "UPLOAD"
+        # NEW (Phase 8 — claim_verification.py). Optional
+        # claim_verification.VerificationResult, or None when verification
+        # was skipped (no sources to check against). Existing callers that
+        # only read .answer/.sources/.used_rag/.source_type are completely
+        # unaffected — this is purely additive.
+        self.verification = verification
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -853,7 +944,7 @@ class AgenticRAGPipeline:
             "Rewritten query (one sentence, under 25 words):"
         )
 
-        rewritten, usage = self.llm.call(system, user, max_tokens=80, temperature=0.0)
+        rewritten, usage = self.llm.call(system, user, max_tokens=80, temperature=0.0, model=GROQ_MODEL)
         rewritten = self._sanitize_rewrite(rewritten, original_query)
         duration  = (time.time() - t0) * 1000
 
@@ -893,7 +984,7 @@ class AgenticRAGPipeline:
             f"Question: {rewritten_query}\n\n"
             "Decision (RAG or DIRECT):"
         )
-        decision_text, usage = self.llm.call(system, user, max_tokens=10)
+        decision_text, usage = self.llm.call(system, user, max_tokens=10, model=GROQ_MODEL)
         duration  = (time.time() - t0) * 1000
         needs_rag = "DIRECT" not in decision_text.upper()  # default to RAG
 
@@ -944,7 +1035,7 @@ class AgenticRAGPipeline:
             decision, _ = self.llm.call(
                 tool_system,
                 f"Query: {rewritten_query}",
-                max_tokens=80, temperature=0.0,
+                max_tokens=80, temperature=0.0, model=GROQ_MODEL,
             )
             decision = decision.strip()
 
@@ -999,6 +1090,7 @@ class AgenticRAGPipeline:
     def _retrieve(self, query_id, rewritten_query,
                   upload_chunks: List[Dict] = None,
                   upload_file_ids: List[str] = None,
+                  scope_to_upload: bool = False,
                   step_order=3):
         """
         Hybrid retrieval: ChromaDB vector (main PDFs) + ChromaDB vector
@@ -1009,15 +1101,33 @@ class AgenticRAGPipeline:
                             by session file_ids — real embeddings, synonym-aware.
           Stage B (BM25):   keyword fallback over raw chunks for the brief window
                             before background indexing finishes.
+
+        scope_to_upload: OPTIONAL, default False (unchanged behavior — merges
+            uploaded-doc hits with the general knowledge base, as before).
+            When True AND the session actually has an uploaded file
+            (upload_chunks or upload_file_ids present), the general-KB
+            vector_store.similarity_search()/self.bm25.search() calls are
+            skipped entirely — retrieval draws ONLY from the uploaded
+            document, so the grounded answer can't blend in unrelated
+            general-KB content. Falls back to normal merged behavior if no
+            upload is actually present, since there'd be nothing to scope to.
         """
         t0 = time.time()
 
-        # ── Main PDF collection ───────────────────────────────────────────────
-        vector_results = vector_store.similarity_search(rewritten_query, top_k=TOP_K_VECTOR)
-        for doc in vector_results:
-            doc.setdefault("bm25_score", None)
+        only_upload = scope_to_upload and (upload_chunks or upload_file_ids)
 
-        bm25_results = self.bm25.search(rewritten_query, top_k=TOP_K_BM25)
+        # ── Main PDF collection ───────────────────────────────────────────────
+        # Skipped entirely when only_upload — this IS the scoping mechanism,
+        # not a filter applied after the fact, so general-KB content never
+        # even enters the candidate pool for _rerank()/_generate_grounded().
+        if only_upload:
+            vector_results = []
+            bm25_results = []
+        else:
+            vector_results = vector_store.similarity_search(rewritten_query, top_k=TOP_K_VECTOR)
+            for doc in vector_results:
+                doc.setdefault("bm25_score", None)
+            bm25_results = self.bm25.search(rewritten_query, top_k=TOP_K_BM25)
 
         upload_vector_hits = []
         upload_bm25_hits   = []
@@ -1080,6 +1190,10 @@ class AgenticRAGPipeline:
         elif not upload_chunks and not upload_file_ids:
             print("  [UPLOAD] No session upload chunks or file_ids for this query")
 
+        if only_upload:
+            print(f"  [UPLOAD] scope_to_upload=True — general knowledge base skipped, "
+                  f"answer will draw ONLY from the uploaded document")
+
         # ── Merge upload hits into retrieval pools ────────────────────────────
         if upload_vector_hits:
             vector_results = upload_vector_hits + vector_results
@@ -1137,7 +1251,7 @@ class AgenticRAGPipeline:
             "Evaluation (JSON only):"
         )
 
-        eval_text, usage = self.llm.call(system, user, max_tokens=120)
+        eval_text, usage = self.llm.call(system, user, max_tokens=120, model=GROQ_MODEL)
         duration = (time.time() - t0) * 1000
 
         verdict, feedback = "none", eval_text
@@ -1175,33 +1289,83 @@ class AgenticRAGPipeline:
         context = _build_context(docs, max_chars=4500)  # FIX 5
 
         confidence_instruction = (
-            "The retrieved documents are only PARTIALLY relevant — give the best "
+            "The retrieved context is only PARTIALLY relevant — give the best "
             "partial answer using what is available."
             if verdict == "partial" else
-            "The retrieved documents directly support answering this question."
+            "The retrieved context directly supports answering this question."
         )
 
         upload_sources = list({d["source_file"] for d in docs if d.get("from_upload")})
-        upload_note    = (
-            f"\nNote: The user uploaded these files this session — treat them as "
-            f"primary sources: {', '.join(upload_sources)}.\n"
-            if upload_sources else ""
-        )
+        has_upload_hits = bool(upload_sources)
+        if has_upload_hits:
+            # Upload-scoped answers stay strict: the user wants to know
+            # what's actually IN their document, so blending in general
+            # knowledge here would be actively misleading.
+            upload_note = (
+                f"\nThe user uploaded these files this session, and passages from "
+                f"them appear in the context below: {', '.join(upload_sources)}. "
+                f"Treat the UPLOADED passages as the primary source for anything "
+                f"the question could be asking about the uploaded file.\n"
+                f"If the question is clearly about the uploaded file specifically "
+                f"and the uploaded passages below don't cover it, say plainly that "
+                f"you don't have that information — do NOT quietly answer from the "
+                f"general knowledge-base passages instead when the question was "
+                f"directed at the uploaded file.\n"
+            )
+            context_instruction = (
+                "Answer using the provided context — prioritize the uploaded "
+                "document's content for anything specific to it. Do not "
+                "supplement with general knowledge for questions specifically "
+                "about the uploaded file's content."
+            )
+        else:
+            upload_note = ""
+            # General-knowledge-base case: the context is a starting point,
+            # not a hard boundary. Repeatedly hedging ("not explicitly
+            # stated", "not well documented") on well-established topics
+            # the model actually knows is unhelpful — but specific
+            # actionable numbers/recommendations that aren't backed by
+            # anything real still shouldn't be invented.
+            context_instruction = (
+                "Use the provided context as your primary source, but you are "
+                "not limited to it: if it only partially covers the question, "
+                "draw on your own general agricultural knowledge to give a "
+                "complete, useful answer — the way a knowledgeable expert "
+                "would, without dwelling on what the context does or doesn't "
+                "include. Don't invent specific numbers, named study results, "
+                "dosages, or region/season-specific recommendations that "
+                "aren't in the context or well-established general knowledge — "
+                "stay appropriately general for anything actionable you can't "
+                "actually verify."
+            )
 
         system = (
             "You are AgriBot, an expert agricultural research assistant.\n"
             f"{confidence_instruction}\n"
             f"{upload_note}"
-            "Answer using ONLY the provided documents. "
-            "Do not add general knowledge not in the documents.\n\n"
-            "Output format:\n"
-            "DIRECT ANSWER: <one clear sentence>\n\n"
-            "EXPLANATION:\n<3-5 sentences>\n\n"
-            "Do NOT write SOURCES — they are added automatically."
+            f"{context_instruction}\n\n"
+            "Write a clear, well-organized, detailed answer in flowing prose — "
+            "multiple paragraphs where the topic warrants it, the way a "
+            "knowledgeable colleague would explain it. Do NOT use headers or "
+            "labels like 'DIRECT ANSWER' or 'EXPLANATION' — just write the "
+            "answer directly. Do NOT write SOURCES — they are added "
+            "automatically.\n\n"
+            "CRITICAL: Never refer to your own context as 'the document(s)', "
+            "'the provided text', 'the retrieved documents', or similar — "
+            "and never write meta-commentary like 'the documents provided do "
+            "not mention X', 'the document states that Y', or 'this is not "
+            "explicitly stated/well documented/clearly outlined'. Just answer "
+            "the question directly and completely, as a knowledgeable person "
+            "would.\n\n"
+            "ALSO CRITICAL: Never name a source inline in your prose either — "
+            "no 'according to FAO', no 'the PARC report notes', no domain "
+            "names like 'ahdb.org.uk states', no report titles. Just state "
+            "the fact directly. Attribution is handled automatically by the "
+            "system after your answer — do not do it yourself in any form."
         )
         mcp_section = f"\nAdditional tool context:\n{mcp_context}\n" if mcp_context else ""
         user = (
-            f"Documents:\n{context}\n"
+            f"Context:\n{context}\n"
             f"{mcp_section}"
             f"Conversation history:\n{conversation_history}\n\n"
             f"Question: {rewritten_query}\n\n"
@@ -1264,9 +1428,15 @@ class AgenticRAGPipeline:
                     sites_str = ", ".join(dict.fromkeys(c["site_name"] for c in web_chunks))
                     system = (
                         f"You are AgriBot. Answer ONLY from the content below from: {sites_str}.\n"
-                        "RULES: 1) Only use [Web N] blocks. 2) Cite sources by name. "
-                        "3) No prior knowledge.\n\n"
-                        "Format: DIRECT ANSWER: <sentence>\n\nEXPLANATION:\n<3-5 sentences>"
+                        "RULES: 1) No prior knowledge — use only what's below.\n\n"
+                        "Write a clear, detailed answer in flowing prose — no headers "
+                        "or labels like 'DIRECT ANSWER'/'EXPLANATION', just the answer. "
+                        "Never write meta-commentary like 'the content below states' "
+                        "or 'the sources provided mention', and never name a source "
+                        "inline either — no 'according to X', no domain names, no "
+                        "site names, no '[Web N]' or '[N]' style tags of any kind. "
+                        "Just state the fact directly; attribution is handled "
+                        "automatically after your answer — never do it yourself."
                     )
                     mcp_sec = f"\nTool context:\n{mcp_context}\n" if mcp_context else ""
                     user    = (f"Question: {rewritten_query}\n\nWeb content:\n{web_ctx}"
@@ -1296,10 +1466,10 @@ class AgenticRAGPipeline:
 
         if not results:
             msg = (
-                "DIRECT ANSWER: No relevant information found via web search.\n\n"
-                "EXPLANATION: Tavily returned no results and the trusted-sites "
-                "fallback also found nothing. Please check that TAVILY_API_KEY is "
-                "set (free key at https://app.tavily.com) and try rephrasing."
+                "No relevant information was found via web search. Tavily "
+                "returned no results and the trusted-sites fallback also "
+                "found nothing. Please check that TAVILY_API_KEY is set "
+                "(free key at https://app.tavily.com) and try rephrasing."
             )
             _log_step(query_id, "web_search_tavily", step_order,
                       input_text=rewritten_query, output_text=msg,
@@ -1311,10 +1481,14 @@ class AgenticRAGPipeline:
         sites_str = ", ".join(dict.fromkeys(r["site_name"] for r in results))
         system = (
             f"You are AgriBot. Answer ONLY from the web content below from: {sites_str}.\n\n"
-            "RULES:\n1. Only use [Web N] blocks.\n2. Name each source.\n3. No prior knowledge.\n\n"
-            "Format:\nDIRECT ANSWER: <one clear sentence>\n\n"
-            "EXPLANATION:\n<3-5 sentences citing sources by name>\n\n"
-            "Do NOT write SOURCES — added automatically."
+            "RULES:\n1. No prior knowledge — use only the web content below.\n\n"
+            "Write a clear, detailed answer in flowing prose — no headers or "
+            "labels like 'DIRECT ANSWER'/'EXPLANATION', just the answer directly. "
+            "Never write meta-commentary like 'the content below states' or 'the "
+            "sources provided mention', and never name a source inline either — "
+            "no 'according to X', no domain names, no site names, no '[Web N]' "
+            "or '[N]' style tags of any kind. Just state the fact directly. "
+            "Do NOT write SOURCES — attribution is added automatically."
         )
         mcp_sec = f"\nTool context:\n{mcp_context}\n" if mcp_context else ""
         user    = (f"Question: {rewritten_query}\n\nWeb content:\n{web_ctx}\n"
@@ -1334,13 +1508,116 @@ class AgenticRAGPipeline:
             _log_llm_call(step_id, ACTIVE_MODEL_NAME, system, user, answer, usage)
         return answer, sources
 
+    # ── Agent 6: Claim verification gate (Phase 8) ────────────────────────────
+
+    def _verify_claims(self, query_id, user_query, answer, sources, step_order=7):
+        """
+        Runs claim_verification.verify_answer() against the SAME sources
+        list already returned to the caller (now carrying a "snippet" of
+        real text per source, not just keywords — see
+        _build_sources_from_docs / _build_sources_from_web above).
+
+        Returns (final_answer, verification_result). final_answer is
+        ALWAYS the original answer, byte-for-byte — this step is
+        currently observability-only (logs status/confidence/claim count
+        to the pipeline trace, same as every other step) and does NOT
+        edit what the user sees. It previously appended a caveat via
+        claim_verification.apply_qualifier() on anything less than
+        SUPPORTED; that's disabled for now because the underlying check
+        was mis-firing (0 claims parsed → false INSUFFICIENT_EVIDENCE on
+        every answer — see the parse-failure log line below). Re-enable
+        by calling apply_qualifier() again once you've watched a few real
+        runs and are confident it's classifying correctly.
+
+        Skipped entirely (returns the answer unchanged, verification=None)
+        when there are no sources to check against — that's either the
+        force_web "no results found" message (already self-explanatory)
+        or a DIRECT-type answer with nothing to verify.
+        """
+        if not sources:
+            return answer, None
+
+        t0 = time.time()
+        result = claim_verification.verify_answer(self.llm, user_query, answer, sources)
+        duration = (time.time() - t0) * 1000
+
+        if not result.claims and result.raw_llm_output:
+            # This is exactly the "0 claims checked" failure mode — the
+            # verifier LLM call ran but didn't return parseable JSON.
+            # Printed (not just logged to sqlite) so it's visible in the
+            # terminal the next time this happens, instead of only
+            # showing up as an opaque INSUFFICIENT_EVIDENCE/Low result.
+            print(f"  [VERIFY] parse failed — raw model output was:\n{result.raw_llm_output[:800]}")
+
+        _log_step(query_id, "claim_verification", step_order,
+                  input_text=answer[:500],
+                  output_text=f"status={result.overall_status} confidence={result.confidence} "
+                              f"claims={len(result.claims)} high_risk_unresolved={len(result.unresolved_high_risk)}",
+                  duration_ms=duration)
+        icon = {"SUPPORTED": "✓", "PARTIALLY_SUPPORTED": "~",
+                "INSUFFICIENT_EVIDENCE": "✗", "CONFLICTING_EVIDENCE": "⚡", "OUT_OF_SCOPE": "?"}.get(result.overall_status, "?")
+        print(f"  [VERIFY] {result.overall_status} {icon} | confidence={result.confidence} "
+              f"| {len(result.claims)} claims checked")
+        return answer, result
+
     # ── Main pipeline entry point ─────────────────────────────────────────────
+
+    # ── Inline translation (replaces language_layer.py's translate_to_english /
+    # translate_from_english — see the import-block comment above for why) ──
+
+    def _translate_query_to_english(self, query: str, detected_lang: str) -> str:
+        """Used for RETRIEVAL only — English PDFs need an English query for
+        good vector/BM25 matches. Falls back to the original query on any
+        failure (empty result or exception) rather than ever returning
+        nothing, since an empty query would search against nothing."""
+        system = (
+            "You are a precise translator for an agricultural search system. "
+            "Translate the user's question into clear, natural English "
+            "suitable for searching English-language agriculture documents. "
+            "Respond with ONLY the translated question — no quotes, no "
+            "explanation, nothing else."
+        )
+        user = f"Question ({detected_lang}): {query}\n\nEnglish translation:"
+        try:
+            translated, _usage = self.llm.call(system, user, max_tokens=150, temperature=0.0)
+            translated = (translated or "").strip().strip('"').strip()
+            return translated or query
+        except Exception as e:
+            print(f"[LANG] query translation failed ({e!r}) — using original query.")
+            return query
+
+    def _translate_answer_to_language(self, answer: str, detected_lang: str) -> str:
+        """Used for the FINAL answer — this is what replaces
+        translate_from_english. Explicitly preserves [N] citation tags
+        (the frontend's sources panel matches on these) since a careless
+        translation can otherwise drop, renumber, or mangle them."""
+        lang_desc = _LANG_NAMES.get(detected_lang, detected_lang)
+        system = (
+            f"You are a precise translator for an agricultural knowledge "
+            f"assistant. Translate the following answer into {lang_desc}.\n\n"
+            f"CRITICAL: preserve every inline citation tag exactly as "
+            f"written — tags like [1], [2], [3] must stay in plain ASCII "
+            f"digits and brackets, in the same position relative to the "
+            f"sentence they follow. Do not add, remove, translate, or "
+            f"renumber citations.\n\n"
+            f"Output ONLY the translated answer — no headers, no "
+            f"commentary, no explanation of what you did."
+        )
+        user = f"Answer to translate:\n{answer}\n\nTranslation:"
+        try:
+            translated, _usage = self.llm.call(system, user, max_tokens=1200, temperature=0.1)
+            return (translated or "").strip()
+        except Exception as e:
+            print(f"[LANG] answer translation failed ({e!r}).")
+            return ""
 
     # ── Multilingual entry point (Stage 1: text-only) ──────────────────────
     def run(self, session_id: str, user_query: str,
             upload_chunks: List[Dict] = None,
             upload_file_ids: List[str] = None,
-            force_web: bool = False) -> PipelineResult:
+            force_web: bool = False,
+            scope_to_upload: bool = False,
+            harness=None, agent_id: str = None, loop=None) -> PipelineResult:
         """
         Public entry point. Wraps _run_core() with language detection and
         translation so the farmer can type Urdu, Roman Urdu, or English and
@@ -1361,38 +1638,100 @@ class AgenticRAGPipeline:
 
         If language_layer.py isn't installed, this silently falls back to
         pure English-only behavior — no crash, no behavior change.
+
+        harness / agent_id / loop: OPTIONAL. When provided (by
+        chat_workflow.py's agentic path), each internal pipeline step is
+        wrapped as a real harness agent (QueryRewriterAgent,
+        RetrievalAgent, etc.) via AgentHarness.run_agent_blocking(). When
+        None (every other/existing caller — tests, scripts,
+        inspect_last_query, etc.), _run_core() behaves EXACTLY as before
+        this parameter existed. See agent_harness/workflows/chat_workflow.py.
         """
         if not _LANG_LAYER_AVAILABLE:
             return self._run_core(session_id, user_query, upload_chunks,
-                                  upload_file_ids, force_web)
+                                  upload_file_ids, force_web, scope_to_upload,
+                                  harness=harness, agent_id=agent_id, loop=loop)
 
-        detected_lang = detect_language(user_query)
+        try:
+            detected_lang = detect_language(user_query)
+        except Exception as e:
+            print(f"[LANG] detect_language failed ({e!r}) — treating as English.")
+            return self._run_core(session_id, user_query, upload_chunks,
+                                  upload_file_ids, force_web, scope_to_upload,
+                                  harness=harness, agent_id=agent_id, loop=loop)
         print(f"[LANG] Detected: {detected_lang!r} for query: {user_query[:60]!r}")
 
         if detected_lang == "en":
             return self._run_core(session_id, user_query, upload_chunks,
-                                  upload_file_ids, force_web)
+                                  upload_file_ids, force_web, scope_to_upload,
+                                  harness=harness, agent_id=agent_id, loop=loop)
 
-        # Translate the farmer's query into English for retrieval + generation
-        query_for_pipeline = translate_to_english(user_query, detected_lang, self.llm)
+        # Translate the farmer's query into English for retrieval + generation.
+        # _translate_query_to_english() already falls back to the original
+        # query internally on any failure — it never raises and never
+        # returns empty — so no try/except is needed at this call site.
+        query_for_pipeline = self._translate_query_to_english(user_query, detected_lang)
         print(f"[LANG] Translated query → {query_for_pipeline[:80]!r}")
 
         result = self._run_core(session_id, query_for_pipeline, upload_chunks,
-                                upload_file_ids, force_web)
+                                upload_file_ids, force_web, scope_to_upload,
+                                harness=harness, agent_id=agent_id, loop=loop)
+        english_answer = result.answer  # kept in case the translation below comes back empty
 
         # Translate the answer back to the farmer's language.
         # Inline [N] citation tags are plain ASCII digits in brackets —
-        # NLLB passes them through unchanged, so translation doesn't break
-        # the sources panel wiring.
-        result.answer = translate_from_english(result.answer, detected_lang, self.llm)
-        print(f"[LANG] Translated answer back to {detected_lang!r}")
+        # the translation prompt explicitly preserves them.
+        # _translate_answer_to_language() returns "" on any failure
+        # (rather than raising) — checked explicitly below.
+        translated = self._translate_answer_to_language(result.answer, detected_lang)
+        if translated and translated.strip():
+            result.answer = translated
+            print(f"[LANG] Translated answer → {detected_lang!r}")
+        else:
+            # An English answer the farmer can still read beats a blank
+            # bubble — this is the exact failure mode that used to reach
+            # the frontend's `data.response || "No response."` fallback.
+            print(f"[LANG] answer translation returned empty for "
+                  f"detected_lang={detected_lang!r} — keeping the English answer.")
+
+        if not result.answer or not result.answer.strip():
+            # Final belt-and-braces: whatever happened above, never let an
+            # empty string reach api_server.py — that's indistinguishable
+            # from a crash to the frontend (AgriBot.jsx:
+            # `data.response || "No response."`).
+            result.answer = english_answer or "I wasn't able to generate a response to that — please try rephrasing your question."
 
         return result
+
+    def _call_step(self, harness, loop, agent_id, agent_name, fn, *args, **kwargs):
+        """
+        The ONLY new control point _run_core()'s step calls go through.
+        When harness is None (unchanged default), just calls fn() directly
+        — zero behavior change from before this existed. When harness is
+        provided, dispatches fn() through
+        AgentHarness.run_agent_blocking(), which bridges this worker
+        thread back to the main/harness event loop for event
+        publishing only — fn() itself still runs on a worker thread, never
+        on the event loop. See agent_box.py's run_agent_blocking()
+        docstring for the full mechanism.
+
+        This does NOT touch, duplicate, or reorder any of _run_core()'s
+        control flow (the retry while-loop, force_web branch, upload_chunks
+        branch all stay exactly where they are, calling this instead of
+        calling fn() directly).
+        """
+        if harness is None:
+            return fn(*args, **kwargs)
+        return harness.run_agent_blocking(
+            agent_name, fn, *args, loop=loop, parent_agent_id=agent_id, **kwargs
+        )
 
     def _run_core(self, session_id: str, user_query: str,
             upload_chunks: List[Dict] = None,
             upload_file_ids: List[str] = None,
-            force_web: bool = False) -> PipelineResult:
+            force_web: bool = False,
+            scope_to_upload: bool = False,
+            harness=None, agent_id: str = None, loop=None) -> PipelineResult:
         """
         Execute the full pipeline. This is the ORIGINAL English-only pipeline
         logic, unchanged — renamed from run() to _run_core() so the new
@@ -1404,6 +1743,10 @@ class AgenticRAGPipeline:
             user_query:     The user's raw question.
             upload_chunks:    Chunks from session-uploaded files.
             upload_file_ids: file_id list for user_uploads ChromaDB query.
+            scope_to_upload: When True (and an upload is actually present),
+                RetrievalAgent draws ONLY from the uploaded document —
+                see _retrieve()'s docstring. Default False = unchanged
+                merged-with-general-KB behavior.
             force_web:       True when the UI "Web Search" toggle is ON.
                             Skips the PDF index and goes straight to Tavily.
 
@@ -1431,34 +1774,42 @@ class AgenticRAGPipeline:
         step_counter = 1
 
         # ── Step 1: Query Rewriter ────────────────────────────────────────────
-        rewritten_query = self._query_rewriter(
+        rewritten_query = self._call_step(
+            harness, loop, agent_id, "QueryRewriterAgent", self._query_rewriter,
             query_id, user_query, conversation_history, step_order=step_counter)
         step_counter += 1
 
         # ── Step 2: Orchestrator (advisory, logged only) ──────────────────────
         # FIX 4: result is logged but never gates the RAG path
-        _needs_rag = self._orchestrator(
+        _needs_rag = self._call_step(
+            harness, loop, agent_id, "OrchestratorAgent", self._orchestrator,
             query_id, rewritten_query, step_order=step_counter)
         step_counter += 1
 
         # ── Step 2b: MCP Tool Dispatch ────────────────────────────────────────
         # FIX 2 + FIX 3: Tavily absent from manifest; ran flag prevents false MCP tag
-        mcp_context, mcp_ran = self._mcp_dispatch(
+        mcp_context, mcp_ran = self._call_step(
+            harness, loop, agent_id, "MCPDispatcherAgent", self._mcp_dispatch,
             rewritten_query, query_id=query_id, step_order=step_counter)
         step_counter += 1
 
         # ── Web search override (UI toggle) ───────────────────────────────────
         if force_web:
-            answer, sources = self._generate_from_web(
+            answer, sources = self._call_step(
+                harness, loop, agent_id, "WebFallbackAgent", self._generate_from_web,
                 query_id, user_query, rewritten_query,
                 conversation_history, mcp_context=mcp_context,
                 step_order=step_counter)
+            step_counter += 1
+            answer, verification = self._call_step(
+                harness, loop, agent_id, "ClaimVerificationAgent", self._verify_claims,
+                query_id, user_query, answer, sources, step_order=step_counter)
             _log_response(query_id, answer, used_rag=False, retry_count=0)
             print("\n[PIPELINE] WEB response generated (force_web=True).")
             return PipelineResult(
                 answer=answer, sources=sources,
                 used_rag=False, retry_count=0,
-                source_type="WEB",
+                source_type="WEB", verification=verification,
             )
 
         # ── RAG path — always runs (FIX 4) ────────────────────────────────────
@@ -1469,27 +1820,42 @@ class AgenticRAGPipeline:
         while retry_count <= MAX_RETRIES:
             if retry_count > 0:
                 print(f"\n  [RETRY {retry_count}/{MAX_RETRIES}]")
-                rewritten_query = self._query_rewriter(
+                if harness is not None:
+                    # Real, lightweight retry marker — not a step, just a
+                    # signal event carrying the actual reason the
+                    # evaluator gave, same info the terminal's
+                    # [RETRY N/2] line already shows.
+                    self._call_step(
+                        harness, loop, agent_id, "RetryController",
+                        lambda **_: {"retry_number": retry_count, "max_retries": MAX_RETRIES,
+                                     "reason": evaluator_feedback},
+                    )
+                rewritten_query = self._call_step(
+                    harness, loop, agent_id, "QueryRewriterAgent", self._query_rewriter,
                     query_id, user_query, conversation_history,
                     evaluator_feedback=evaluator_feedback,
                     step_order=step_counter)
                 step_counter += 1
 
             # Step 3: Retrieve
-            vector_results, bm25_results = self._retrieve(
+            vector_results, bm25_results = self._call_step(
+                harness, loop, agent_id, "RetrievalAgent", self._retrieve,
                 query_id, rewritten_query,
                 upload_chunks=upload_chunks,
                 upload_file_ids=upload_file_ids,
+                scope_to_upload=scope_to_upload,
                 step_order=step_counter)
             step_counter += 1
 
             # Step 4: RRF Rerank
-            reranked_docs = self._rerank(
+            reranked_docs = self._call_step(
+                harness, loop, agent_id, "RerankingAgent", self._rerank,
                 query_id, vector_results, bm25_results, step_order=step_counter)
             step_counter += 1
 
             # Step 5: Relevance Evaluator
-            is_relevant, evaluator_feedback, verdict = self._evaluator(
+            is_relevant, evaluator_feedback, verdict = self._call_step(
+                harness, loop, agent_id, "RelevanceEvaluatorAgent", self._evaluator,
                 query_id, user_query, rewritten_query,
                 reranked_docs, step_order=step_counter)
             step_counter += 1
@@ -1530,36 +1896,53 @@ class AgenticRAGPipeline:
                          "vector_score": c.get("vector_score", 0.5)}
                         for i, c in enumerate(upload_chunks[:TOP_K_FINAL])
                     ]
-                    answer, sources = self._generate_grounded(
+                    answer, sources = self._call_step(
+                        harness, loop, agent_id, "GroundedLLMAgent", self._generate_grounded,
                         query_id, user_query, rewritten_query,
                         upload_only_docs, conversation_history,
                         verdict="sufficient", mcp_context=mcp_context,
                         step_order=step_counter)
+                    step_counter += 1
+                    answer, verification = self._call_step(
+                        harness, loop, agent_id, "ClaimVerificationAgent", self._verify_claims,
+                        query_id, user_query, answer, sources, step_order=step_counter)
                     _log_response(query_id, answer, used_rag=True, retry_count=retry_count)
                     return PipelineResult(
                         answer=answer, sources=sources,
                         used_rag=True, retry_count=retry_count,
-                        source_type="UPLOAD",
+                        source_type="UPLOAD", verification=verification,
                     )
 
                 print(f"\n[PIPELINE] No relevant docs after {MAX_RETRIES} retries — web fallback.")
-                answer, sources = self._generate_from_web(
+                answer, sources = self._call_step(
+                    harness, loop, agent_id, "WebFallbackAgent", self._generate_from_web,
                     query_id, user_query, rewritten_query,
                     conversation_history, mcp_context=mcp_context,
                     step_order=step_counter)
+                step_counter += 1
+                answer, verification = self._call_step(
+                    harness, loop, agent_id, "ClaimVerificationAgent", self._verify_claims,
+                    query_id, user_query, answer, sources, step_order=step_counter)
                 _log_response(query_id, answer, used_rag=False, retry_count=retry_count)
                 return PipelineResult(
                     answer=answer, sources=sources,
                     used_rag=False, retry_count=retry_count,
-                    source_type="WEB",
+                    source_type="WEB", verification=verification,
                 )
 
         # ── Step 6: Generate grounded answer ──────────────────────────────────
-        answer, sources = self._generate_grounded(
+        answer, sources = self._call_step(
+            harness, loop, agent_id, "GroundedLLMAgent", self._generate_grounded,
             query_id, user_query, rewritten_query,
             reranked_docs, conversation_history,
             verdict=final_verdict, mcp_context=mcp_context,
             step_order=step_counter)
+        step_counter += 1
+
+        # ── Step 7: Claim verification gate (Phase 8) ──────────────────────────
+        answer, verification = self._call_step(
+            harness, loop, agent_id, "ClaimVerificationAgent", self._verify_claims,
+            query_id, user_query, answer, sources, step_order=step_counter)
 
         _log_response(query_id, answer, used_rag=True, retry_count=retry_count)
         print(f"\n[PIPELINE] RAG response generated (retries={retry_count}).")
@@ -1569,7 +1952,7 @@ class AgenticRAGPipeline:
         return PipelineResult(
             answer=answer, sources=sources,
             used_rag=True, retry_count=retry_count,
-            source_type=source_type,
+            source_type=source_type, verification=verification,
         )
 
 

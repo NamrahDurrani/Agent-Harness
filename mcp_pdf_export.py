@@ -51,6 +51,7 @@ import re
 import time
 import html as _html
 from typing import Optional
+from agent_harness.tracer import trace_execution
 # from mcp_pdf_export import mcp_generate_pdf
 
 
@@ -67,8 +68,6 @@ except ImportError:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
   --green:      #4a7a2e;
   --green-light:#e8f4e0;
@@ -716,6 +715,7 @@ def _build_html(data: dict, session_id: str) -> str:
 #  Public API
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@trace_execution(name='mcp_generate_pdf', node='pdf_export')
 def mcp_generate_pdf(session_id: str, conn) -> dict:
     """
     MCP tool entry point.

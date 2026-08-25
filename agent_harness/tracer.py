@@ -76,7 +76,23 @@ def trace_execution(name: str = None, node: str = None):
             @functools.wraps(func)
             def _wrapped(*args, **kwargs):
                 # sync wrapper runs blocking; publish via asyncio
-                loop = asyncio.get_event_loop()
+                # FIX: asyncio.get_event_loop() raises RuntimeError (Python
+                # 3.10+, especially 3.12/3.13) when called from a worker
+                # thread that never had a loop set — e.g. an
+                # asyncio.to_thread() executor thread. Every loop.create_task
+                # call below this point already tolerates failure via
+                # try/except; this one line wasn't guarded the same way, so
+                # a decorated sync function called from such a thread (e.g.
+                # mcp_generate_pdf via the PDF export workflow) would crash
+                # before ever running the actual function. Tracing becomes a
+                # best-effort no-op here instead — the caller (e.g.
+                # run_report_workflow) already emits its own start/end/error
+                # events on the correctly-captured main loop, so no
+                # visibility is actually lost.
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = None
                 event_id = uuid.uuid4().hex
                 start_ts = _now()
                 start_evt = {

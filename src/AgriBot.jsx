@@ -7,34 +7,12 @@
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ttsService } from "./services/tts";
+import agribotIcon from "./assets/agribot-icon.png";
+import { getThemeColors } from "./theme";
 
 // ═══════════════════════════════════════════════════════════════════
-//  THEME SYSTEM
+//  THEME SYSTEM — see ./theme.js (shared with Dashboard.jsx)
 // ═══════════════════════════════════════════════════════════════════
-const DARK = {
-  bg:        "#0c1108", surface:   "#141c0f", surface2:  "#1c2614",
-  surface3:  "#222e18", border:    "#2a3d1e", borderHi:  "#3d5a2a",
-  accent:    "#7ab648", accentDim: "#4a7a1e", accentBg:  "rgba(122,182,72,0.12)",
-  amber:     "#e8a020", amberDim:  "#7a4e00", amberBg:   "rgba(232,160,32,0.12)",
-  text:      "#dde8cc", textSub:   "#7a9460", textMute:  "#4a6035",
-  userBub:   "#1a2e10", botBub:    "#0f1a08", danger:    "#c0392b",
-  dangerBg:  "rgba(192,57,43,0.12)", inputBg:  "#1c2614", shadow: "0 8px 32px rgba(0,0,0,0.5)",
-};
-const LIGHT = {
-  bg:        "#f0f7ec", surface:   "#ffffff", surface2:  "#e8f4e0",
-  surface3:  "#d4ecc4", border:    "#b8d9a0", borderHi:  "#7ab648",
-  accent:    "#4a8a1e", accentDim: "#2a6a0a", accentBg:  "rgba(74,138,30,0.10)",
-  amber:     "#8a5800", amberDim:  "#5a3a00", amberBg:   "rgba(138,88,0,0.10)",
-  text:      "#1a2e10", textSub:   "#3a6020", textMute:  "#6a9450",
-  userBub:   "#d4ecc4", botBub:    "#eaf5e0", danger:    "#c0392b",
-  dangerBg:  "rgba(192,57,43,0.08)", inputBg:  "#e8f4e0", shadow: "0 8px 32px rgba(60,100,30,0.12)",
-};
-
-function getThemeColors(mode) {
-  if (mode === "light") return LIGHT;
-  if (mode === "dark")  return DARK;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? DARK : LIGHT;
-}
 
 // ═══════════════════════════════════════════════════════════════════
 //  ICONS  (inline SVG paths)
@@ -122,6 +100,13 @@ function openSource(src) {
   }
 }
 
+function isUrduText(text) {
+  if (!text) return false;
+  const urduChars = (text.match(/[\u0600-\u06FF\u0750-\u077F]/g) || []).length;
+  const totalChars = text.replace(/\s/g, "").length || 1;
+  return urduChars / totalChars > 0.15;
+}
+
 function CitationText({ text, sources, C }) {
   const parts = text.split(/(\[\d+\])/g);
   return parts.map((part, i) => {
@@ -135,12 +120,15 @@ function CitationText({ text, sources, C }) {
           title={src ? (web ? src.label : `${src.source_file} p.${src.page}`) : ""}
           style={{
             cursor: src ? "pointer" : "default",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: 15, height: 15, marginLeft: 2,
             color: src ? (web ? C.amber : C.accent) : C.textMute,
-            fontWeight: 700, fontSize: "0.7em", padding: "1px 4px", borderRadius: 3,
+            fontWeight: 700, fontSize: "0.62em", borderRadius: "50%",
             background: src ? (web ? C.amberBg : C.accentBg) : "transparent",
             border: src ? `1px solid ${web ? C.amberDim : C.accentDim}` : "none",
+            verticalAlign: "super", lineHeight: 1,
           }}>
-          {part}
+          {num}
         </sup>
       );
     }
@@ -216,10 +204,338 @@ function SourcesPanel({ open, onClose, sources, label, C }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  AGENT EXECUTION PANEL — live harness tree via SSE
+//
+//  Renders ONLY events actually received from /agent/events/{execution_id}.
+//  A node appears the instant its real agent.start event arrives and
+//  never before — there is no pre-declared/fake tree shape here. Status,
+//  duration, retry_count, tools, and input/output summaries are exactly
+//  what the backend's AgentHarness (agent_box.py) put in the event.
+//
+//  NOTE on the `parentAgentId` field below: agent_box.py's events carry
+//  the parent AGENT's id under the JSON key "parent_execution_id" (a
+//  pre-existing naming choice in the harness, not something invented
+//  here) — it is NOT the overall workflow's execution_id. Each event's
+//  top-level "execution_id" field is the actual run id; we already know
+//  that one client-side since we generated it before subscribing.
+// ═══════════════════════════════════════════════════════════════════
+function formatDuration(ms) {
+  if (ms == null) return "";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function AgentNodeIcon({ status, C }) {
+  if (status === "running") {
+    return <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: C.accent, animation: "agriPulse 1.1s ease-in-out infinite", flexShrink: 0 }} />;
+  }
+  if (status === "completed") return <span style={{ color: C.accent, fontWeight: 700, flexShrink: 0 }}>✓</span>;
+  if (status === "failed") return <span style={{ color: "#e74c3c", fontWeight: 700, flexShrink: 0 }}>✕</span>;
+  if (status === "retrying") return <span style={{ color: C.amber || "#b07010", fontWeight: 700, flexShrink: 0 }}>⚠</span>;
+  return <span style={{ color: C.textMute, flexShrink: 0 }}>○</span>;
+}
+
+function AgentTreeNode({ node, C, depth, selectedId, onSelect }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const hasChildren = node.children && node.children.length > 0;
+  const isSelected = selectedId === node.agentId;
+
+  return (
+    <div>
+      <div
+        onClick={() => onSelect(node.agentId)}
+        style={{
+          display: "flex", alignItems: "center", gap: 7,
+          padding: "5px 8px", marginLeft: depth * 16,
+          borderRadius: 6, cursor: "pointer",
+          background: isSelected ? C.accentBg : "transparent",
+          border: `1px solid ${isSelected ? C.accentDim : "transparent"}`,
+        }}
+        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = C.surface2; }}
+        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+      >
+        {hasChildren && (
+          <span onClick={e => { e.stopPropagation(); setCollapsed(c => !c); }}
+            style={{ width: 12, color: C.textMute, fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+            {collapsed ? "▸" : "▾"}
+          </span>
+        )}
+        {!hasChildren && <span style={{ width: 12, flexShrink: 0 }} />}
+        <AgentNodeIcon status={node.status} C={C} />
+        <span style={{ fontSize: 12.5, color: C.text, fontWeight: node.status === "running" ? 700 : 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {node.name}
+        </span>
+        {node.retryCount > 0 && (
+          <span style={{ fontSize: 10, color: C.amber || "#b07010", background: C.amberBg || "rgba(176,112,16,0.12)", padding: "1px 6px", borderRadius: 8, flexShrink: 0 }}>
+            retry {node.retryCount}
+          </span>
+        )}
+        <span style={{ flex: 1 }} />
+        <span style={{ fontSize: 11, color: C.textMute, flexShrink: 0 }}>
+          {node.status === "running" ? "running…" : formatDuration(node.durationMs)}
+        </span>
+      </div>
+      {hasChildren && !collapsed && node.children.map(child => (
+        <AgentTreeNode key={child.agentId} node={child} C={C} depth={depth + 1} selectedId={selectedId} onSelect={onSelect} />
+      ))}
+    </div>
+  );
+}
+
+function AgentExecutionPanel({ open, onClose, executionId, nodes, execStatus, execError, C }) {
+  const [selectedId, setSelectedId] = useState(null);
+
+  // Build tree from the flat { agentId -> node } map every render — trees
+  // here are small (a dozen-ish agents), no need to memoize.
+  const roots = [];
+  if (nodes) {
+    const byId = nodes;
+    const childrenOf = {};
+    Object.values(byId).forEach(n => {
+      const pid = n.parentAgentId || "__root__";
+      (childrenOf[pid] = childrenOf[pid] || []).push(n);
+    });
+    const attach = (n) => { n.children = (childrenOf[n.agentId] || []).sort((a, b) => a.startedAt - b.startedAt); n.children.forEach(attach); return n; };
+    (childrenOf["__root__"] || []).sort((a, b) => a.startedAt - b.startedAt).forEach(n => roots.push(attach(n)));
+  }
+  const selectedNode = selectedId ? nodes[selectedId] : null;
+
+  return (
+    <div style={{
+      width: open ? 340 : 0, minWidth: open ? 340 : 0,
+      background: C.surface, borderLeft: `1px solid ${C.border}`,
+      display: "flex", flexDirection: "column", overflow: "hidden",
+      transition: "width 0.22s ease, min-width 0.22s ease", flexShrink: 0,
+    }}>
+      {open && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon d={I.trace} size={16} stroke={C.accent} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Agent Execution</span>
+            </div>
+            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <Icon d={I.x} size={16} stroke={C.textSub} />
+            </button>
+          </div>
+
+          {executionId && (
+            <div style={{ padding: "8px 16px", fontSize: 10.5, color: C.textMute, borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: "monospace" }}>{executionId.slice(0, 12)}…</span>
+              <span style={{
+                fontWeight: 700,
+                color: execStatus === "completed" ? C.accent : execStatus === "error" ? "#e74c3c" : C.textSub,
+              }}>
+                {execStatus === "connecting" ? "◌ CONNECTING…" : execStatus === "running" ? "● RUNNING" : execStatus === "completed" ? "✓ COMPLETED" : execStatus === "error" ? "✕ FAILED" : ""}
+              </span>
+            </div>
+          )}
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "10px 8px" }}>
+            {roots.length === 0 ? (
+              <div style={{ color: C.textMute, fontSize: 12.5, textAlign: "center", marginTop: 40, lineHeight: 1.7 }}>
+                No execution yet.<br />Send a message or export a PDF<br />to see the live agent tree here.
+              </div>
+            ) : (
+              roots.map(n => <AgentTreeNode key={n.agentId} node={n} C={C} depth={0} selectedId={selectedId} onSelect={id => setSelectedId(id === selectedId ? null : id)} />)
+            )}
+            {execError && (
+              <div style={{ margin: "10px 8px", padding: "8px 10px", borderRadius: 8, background: "rgba(231,76,60,0.1)", border: "1px solid #e74c3c", fontSize: 11.5, color: "#e74c3c" }}>
+                {execError}
+              </div>
+            )}
+          </div>
+
+          {selectedNode && (
+            <div style={{ borderTop: `1px solid ${C.border}`, padding: "12px 16px", maxHeight: 240, overflowY: "auto", flexShrink: 0, background: C.surface2 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, marginBottom: 6 }}>{selectedNode.name}</div>
+              <div style={{ fontSize: 11, color: C.textSub, display: "grid", gridTemplateColumns: "auto 1fr", gap: "3px 8px" }}>
+                <span style={{ color: C.textMute }}>Status</span><span>{selectedNode.status}</span>
+                <span style={{ color: C.textMute }}>Duration</span><span>{formatDuration(selectedNode.durationMs)}</span>
+                {selectedNode.tools && selectedNode.tools.length > 0 && (
+                  <><span style={{ color: C.textMute }}>Tools</span><span>{selectedNode.tools.join(", ")}</span></>
+                )}
+                {selectedNode.retryCount > 0 && (
+                  <><span style={{ color: C.textMute }}>Retries</span><span>{selectedNode.retryCount}</span></>
+                )}
+                {selectedNode.inputSummary && (
+                  <><span style={{ color: C.textMute }}>Input</span><span style={{ wordBreak: "break-word" }}>{selectedNode.inputSummary}</span></>
+                )}
+                {selectedNode.outputSummary && (
+                  <><span style={{ color: C.textMute }}>Output</span><span style={{ wordBreak: "break-word" }}>{selectedNode.outputSummary}</span></>
+                )}
+                {selectedNode.error && (
+                  <><span style={{ color: "#e74c3c" }}>Error</span><span style={{ color: "#e74c3c", wordBreak: "break-word" }}>{selectedNode.error}</span></>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CODE NARRATION BLOCK — the "Analyzing ▾ [Python]" collapsible block.
+//
+//  Rendered from real `code.block` SSE events (agent_harness's
+//  code_narration.py emits the ACTUAL source of the render/chart/compose
+//  function before it runs) — not a fabricated summary, so this is
+//  honest about what "View Analysis" shows later.
+// ═══════════════════════════════════════════════════════════════════
+function CodeNarrationBlock({ label, code, C, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", margin: "6px 0", background: C.surface }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", background: C.surface2, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+        <Icon d={I.chevD} size={12} stroke={C.textSub} style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform 0.15s" }} />
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub }}>{label}</span>
+      </button>
+      {open && (
+        <pre style={{ margin: 0, padding: "10px 14px", fontSize: 11.5, lineHeight: 1.6, color: C.text, background: "rgba(0,0,0,0.25)", overflowX: "auto", fontFamily: "'JetBrains Mono', Consolas, monospace" }}>
+          {code}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DOCUMENT CARD — the 📄 filename chip that appears once
+//  `artifact.preview` fires. Styled after the existing "attached file"
+//  card above the user bubble (same icon-box + name/type layout), so it
+//  reads as the same visual language rather than a bolted-on new pattern.
+// ═══════════════════════════════════════════════════════════════════
+function DocumentCard({ executionId, filename, fileType, C, onOpen }) {
+  const downloadUrl = `/api/artifacts/${executionId}/download`;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "8px 0", maxWidth: 320 }}>
+      <a href={downloadUrl} download
+        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.accent, fontWeight: 600, textDecoration: "none" }}>
+        <Icon d={I.export} size={13} stroke={C.accent} />
+        Download {filename}
+      </a>
+      <div onClick={() => onOpen(executionId, filename, fileType)}
+        style={{ display: "flex", alignItems: "center", gap: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 14px 9px 10px", cursor: "pointer", transition: "border-color 0.15s" }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
+        onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(224,54,42,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Icon d={I.pdf} size={16} stroke="#e0362a" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={filename}>
+            {filename}
+          </div>
+          <div style={{ fontSize: 10.5, color: C.textMute, marginTop: 1 }}>{(fileType || "pdf").toUpperCase()}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DOCUMENT VIEWER PANEL — right-side panel, sibling of
+//  AgentExecutionPanel / SourcesPanel (same slide-open width pattern),
+//  opened by clicking a DocumentCard.
+// ═══════════════════════════════════════════════════════════════════
+function DocumentViewerPanel({ open, onClose, executionId, filename, fileType, onViewAnalysis, C }) {
+  return (
+    <div style={{
+      width: open ? 420 : 0, minWidth: open ? 420 : 0,
+      background: C.surface, borderLeft: `1px solid ${C.border}`,
+      display: "flex", flexDirection: "column", overflow: "hidden",
+      transition: "width 0.22s ease, min-width 0.22s ease", flexShrink: 0,
+    }}>
+      {open && executionId && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+            <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: 10.5, color: C.textMute }}>Library</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{filename}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              <a href={`/api/artifacts/${executionId}/download`} download title="Download"
+                style={{ display: "flex", padding: 6, borderRadius: 6 }}>
+                <Icon d={I.export} size={16} stroke={C.textSub} />
+              </a>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}>
+                <Icon d={I.x} size={16} stroke={C.textSub} />
+              </button>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, background: "#525659", display: "flex" }}>
+            {fileType === "pdf" ? (
+              <iframe src={`/api/artifacts/${executionId}/download`} title={filename}
+                style={{ flex: 1, border: "none" }} />
+            ) : (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: 12.5, textAlign: "center", padding: 20 }}>
+                Preview isn't available for .{fileType} files — use Download to open it.
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: 12, borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+            <button onClick={() => onViewAnalysis(executionId)}
+              style={{ width: "100%", padding: "9px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface2, color: C.text, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              View Analysis
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANALYSIS MODAL — "View Analysis": every code.block the harness
+//  narrated while building this document, fetched from
+//  GET /api/artifacts/{execution_id} (artifact_store.py).
+// ═══════════════════════════════════════════════════════════════════
+function AnalysisModal({ executionId, onClose, C }) {
+  const [blocks, setBlocks] = useState(null);   // null = loading
+
+  useEffect(() => {
+    if (!executionId) return;
+    setBlocks(null);
+    fetch(`/api/artifacts/${executionId}`)
+      .then(r => r.json())
+      .then(d => setBlocks(d.code_blocks || []))
+      .catch(() => setBlocks([]));
+  }, [executionId]);
+
+  if (!executionId) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 2100, display: "flex", alignItems: "center", justifyContent: "center" }}
+      onClick={onClose}>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 22, width: 620, maxWidth: "90vw", maxHeight: "80vh", overflowY: "auto", boxShadow: C.shadow }}
+        onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Analysis</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+            <Icon d={I.x} size={16} stroke={C.textSub} />
+          </button>
+        </div>
+        {blocks === null ? (
+          <div style={{ color: C.textMute, fontSize: 12.5, textAlign: "center", padding: 24 }}>Loading…</div>
+        ) : blocks.length === 0 ? (
+          <div style={{ color: C.textMute, fontSize: 12.5, textAlign: "center", padding: 24 }}>No code was recorded for this document.</div>
+        ) : (
+          blocks.map((b, i) => <CodeNarrationBlock key={i} label={b.label} code={b.code} C={C} defaultOpen={i === 0} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  MESSAGE BUBBLE
 // ═══════════════════════════════════════════════════════════════════
-function Message({ msg, C, token, onRegenerate, onShowSources, msgId }) {
-  const { role, content, ts, sources = [] } = msg;
+function Message({ msg, C, token, onRegenerate, onShowSources, onExportPDF, msgId, onOpenDocument }) {
+  const { role, content, ts, sources = [], attachedFiles = [], scopedToUpload, artifact = null, codeBlocks = [] } = msg;
   const isUser = role === "user";
   const [copied, setCopied] = useState(false);
   const [liked, setLiked]   = useState(null);
@@ -284,12 +600,66 @@ function Message({ msg, C, token, onRegenerate, onShowSources, msgId }) {
         </span>
       </div>
 
-      {/* Bubble */}
-      <div style={{ maxWidth: "76%", background: isUser ? C.userBub : C.botBub, border: `1px solid ${isUser ? C.accentDim : C.border}`, borderRadius: isUser ? "16px 4px 16px 16px" : "4px 16px 16px 16px", padding: "10px 15px", lineHeight: 1.7, fontSize: 14, color: C.text, wordBreak: "break-word" }}>
+      {/* Attached file card(s) — rendered ABOVE the bubble, like ChatGPT.
+          Snapshotted onto the message at send time (see sendMessage),
+          so it always reflects what was actually attached to THIS
+          message even if the composer's attachment later changes. */}
+      {isUser && attachedFiles.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+          {attachedFiles.map((f, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: C.surface, border: `1px solid ${C.border}`,
+              borderRadius: 12, padding: "9px 14px 9px 10px", maxWidth: 260,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            }}>
+              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(224,54,42,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon d={I.file} size={16} stroke="#e0362a" />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={f.name}>
+                  {f.name}
+                </div>
+                <div style={{ fontSize: 10.5, color: C.textMute, marginTop: 1 }}>PDF</div>
+              </div>
+            </div>
+          ))}
+          {scopedToUpload && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "2px 10px", borderRadius: 20, border: `1px solid ${C.accent}`, background: C.accentBg, fontSize: 11, fontWeight: 600, color: C.accent }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
+              This document only
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Bubble — user messages keep the chat-bubble look; bot messages flow
+          borderless like Claude/ChatGPT, no surrounding box. Urdu text
+          gets a larger font size, taller line-height, and RTL direction —
+          Arabic-script glyphs read poorly at Latin-script sizing. */}
+      <div style={isUser
+        ? { maxWidth: "76%", background: C.userBub, border: `1px solid ${C.accentDim}`, borderRadius: "16px 4px 16px 16px", padding: "10px 15px", color: C.text, wordBreak: "break-word", ...(isUrduText(content) ? { fontSize: 19, lineHeight: 2, direction: "rtl", textAlign: "right", fontFamily: "'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif" } : { fontSize: 14, lineHeight: 1.7 }) }
+        : { maxWidth: "88%", padding: "4px 2px", color: C.text, wordBreak: "break-word", ...(isUrduText(content) ? { fontSize: 19, lineHeight: 2.1, direction: "rtl", textAlign: "right", fontFamily: "'Noto Nastaliq Urdu','Jameel Noori Nastaleeq',serif" } : { fontSize: 14.5, lineHeight: 1.75 }) }
+      }>
         {isUser ? (
           <span style={{ whiteSpace: "pre-wrap" }}>{content}</span>
         ) : (
           <div style={{ whiteSpace: "pre-wrap" }}><CitationText text={content} sources={sources} C={C} /></div>
+        )}
+
+        {/* Live "Analyzing" code blocks — real code.block SSE events
+            narrated while this document was being generated. */}
+        {!isUser && codeBlocks.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            {codeBlocks.map((b, i) => <CodeNarrationBlock key={i} label={b.label} code={b.code} C={C} defaultOpen={false} />)}
+          </div>
+        )}
+
+        {/* Generated document card — appears once artifact.preview fires
+            for this message's execution. */}
+        {!isUser && artifact && (
+          <DocumentCard executionId={artifact.executionId} filename={artifact.filename}
+            fileType={artifact.fileType} C={C} onOpen={onOpenDocument} />
         )}
       </div>
 
@@ -309,6 +679,7 @@ function Message({ msg, C, token, onRegenerate, onShowSources, msgId }) {
           <Btn ic="thumbDn"  title="Bad"        active={liked === "dn"}   col={C.danger}  onClick={() => setLiked(l => l === "dn"   ? null : "dn")}   />
           <Btn ic="share"    title="Share"      onClick={() => navigator.clipboard.writeText(content)} />
           {onRegenerate && <Btn ic="regen" title="Regenerate" onClick={onRegenerate} />}
+          {onExportPDF && <Btn ic="pdf" title="Download this conversation as PDF" onClick={onExportPDF} />}
           <div style={{ width: 1, height: 14, background: C.border, margin: "auto 2px" }} />
           <Btn ic="sources" title={sources.length ? "Open sources panel" : "No sources for this answer"}
             active={false} col={C.accent}
@@ -405,9 +776,6 @@ function Welcome({ C, onSend, username }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  SETTINGS MODAL
-// ═══════════════════════════════════════════════════════════════════
 function SettingsModal({ C, open, onClose, username, email, themeMode, setThemeMode }) {
   const [tab, setTab] = useState("profile");
   if (!open) return null;
@@ -502,7 +870,7 @@ function SettingsModal({ C, open, onClose, username, email, themeMode, setThemeM
 // ═══════════════════════════════════════════════════════════════════
 const PROJ_EMOJIS = ["🌱", "🌾", "🪴", "🌽", "🍃", "🌿", "🌻", "🌴", "🫘", "🍀"];
 
-export default function AgriBot({ username = "user", email = "", token, onLogout }) {
+export default function AgriBot({ username = "user", email = "", token, onLogout, onGoToDashboard, initialAction }) {
   // ── Theme ─────────────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem("agribot_theme") || "dark");
   const C = getThemeColors(themeMode);
@@ -529,6 +897,10 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   // ── Upload ────────────────────────────────────────────────────────
   const [uploadStatus, setUploadStatus]   = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [scopeToUpload, setScopeToUpload] = useState(true); // "Answer only from this document" —
+                                                              // defaults ON once a file is attached,
+                                                              // since that's the overwhelming intent
+                                                              // when someone uploads a specific PDF
 
   // ── Status ────────────────────────────────────────────────────────
   const [chunkCount, setChunkCount] = useState(0);
@@ -545,22 +917,168 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   const [sourcesPanelOpen, setSourcesPanelOpen]       = useState(false);
   const [sourcesPanelSources, setSourcesPanelSources] = useState([]);
   const [sourcesPanelLabel, setSourcesPanelLabel]     = useState("");
+
+  // ── Agent Execution panel (live harness tree via SSE) ───────────────
+  const [execPanelOpen, setExecPanelOpen]   = useState(false);
+  const [execNodes, setExecNodes]           = useState({});   // { agentId: node }
+  const [execExecutionId, setExecExecutionId] = useState(null);
+  const [execStatus, setExecStatus]         = useState("idle"); // idle | running | completed | error
+  const [execError, setExecError]           = useState(null);
+  const execEventSourceRef = useRef(null);
+
+  // ── Live document-generation extras for the CURRENT execution ───────
+  // Snapshotted onto the bot message once sendMessage's fetch resolves
+  // (see sendMessage) — kept separate from execNodes since these render
+  // INSIDE the chat bubble, not in the Agent Execution side panel.
+  const [execCodeBlocks, setExecCodeBlocks] = useState([]);   // [{label, code}]
+  const [execArtifact, setExecArtifact]     = useState(null); // {executionId, filename, fileType}
+
+  // ── Right-side Document Viewer panel + Analysis modal ───────────────
+  const [docPanelOpen, setDocPanelOpen] = useState(false);
+  const [docPanelData, setDocPanelData] = useState(null); // {executionId, filename, fileType}
+  const [analysisExecId, setAnalysisExecId] = useState(null);
+
+  const openDocumentViewer = (executionId, filename, fileType) => {
+    setDocPanelData({ executionId, filename, fileType: fileType || "pdf" });
+    setDocPanelOpen(true);
+    setExecPanelOpen(false); // one right-side panel at a time, same as Sources vs Exec today
+    setSourcesPanelOpen(false);
+  };
+
+  // Opens /agent/events/{executionId} BEFORE the actual /api/chat or
+  // /export/pdf request is sent, so events published during that request
+  // are actually caught live instead of arriving after the fact.
+  // Returns a Promise that resolves once the SSE connection is actually
+  // open (EventSource.onopen) — the server's /agent/events/{id} handler
+  // has by then already registered the subscriber on the EventBus
+  // (bus.subscribe() runs synchronously before the StreamingResponse is
+  // returned, so headers can't reach the browser before it). Callers
+  // MUST await this before firing the actual /api/chat or
+  // /export/pdf request — otherwise, on a fast query, the whole backend
+  // workflow can finish and publish all its events before the SSE
+  // subscriber is registered, and every event is lost (EventBus has no
+  // replay/history for late subscribers). A short timeout fallback
+  // prevents hanging forever if onopen never fires for some reason.
+  const subscribeToExecution = useCallback((executionId) => {
+    if (execEventSourceRef.current) { execEventSourceRef.current.close(); }
+    setExecNodes({});
+    setExecExecutionId(executionId);
+    setExecStatus("connecting");
+    setExecError(null);
+    setExecCodeBlocks([]);
+    setExecArtifact(null);
+
+    const es = new EventSource(`/agent/events/${executionId}`);
+    execEventSourceRef.current = es;
+
+    const opened = new Promise(resolve => {
+      let done = false;
+      es.onopen = () => { if (!done) { done = true; setExecStatus("running"); resolve(); } };
+      setTimeout(() => { if (!done) { done = true; resolve(); } }, 1500); // fallback — don't hang forever
+    });
+
+    es.onmessage = (msg) => {
+      let evt;
+      try { evt = JSON.parse(msg.data); } catch { return; }
+
+      if (evt.type === "agent.start") {
+        setExecNodes(prev => ({
+          ...prev,
+          [evt.agent_id]: {
+            agentId: evt.agent_id,
+            // NOTE: agent_box.py's own event shape stores the parent
+            // AGENT's id under "parent_execution_id" — not the workflow's
+            // execution_id (that's the separate top-level evt.execution_id
+            // field, which we already know client-side).
+            parentAgentId: evt.parent_execution_id || null,
+            name: evt.agent_name,
+            status: "running",
+            durationMs: null,
+            retryCount: 0,
+            tools: evt.tools || [],
+            inputSummary: evt.input_summary || null,
+            outputSummary: null,
+            error: null,
+            startedAt: evt.timestamp || Date.now() / 1000,
+          },
+        }));
+      } else if (evt.type === "agent.end") {
+        setExecNodes(prev => {
+          const existing = prev[evt.agent_id];
+          if (!existing) return prev;
+          return {
+            ...prev,
+            [evt.agent_id]: {
+              ...existing,
+              status: evt.status === "failed" ? "failed" : "completed",
+              durationMs: evt.duration_ms,
+              outputSummary: evt.output_summary || null,
+            },
+          };
+        });
+      } else if (evt.type === "agent.error") {
+        setExecNodes(prev => {
+          const existing = prev[evt.agent_id];
+          if (!existing) return prev;
+          return { ...prev, [evt.agent_id]: { ...existing, status: "retrying", error: evt.error || null, retryCount: evt.retry_count || 0 } };
+        });
+      } else if (evt.type === "agent.retry") {
+        setExecNodes(prev => {
+          const existing = prev[evt.agent_id];
+          if (!existing) return prev;
+          return { ...prev, [evt.agent_id]: { ...existing, retryCount: evt.attempt ? evt.attempt - 1 : (existing.retryCount + 1) } };
+        });
+      } else if (evt.type === "code.block") {
+        // Real source code narrated by agent_harness/code_narration.py
+        // right before a render/chart/compose handler runs — this is
+        // what powers the "Analyzing ▾ [Python]" block inline in chat.
+        const meta = evt.meta || {};
+        setExecCodeBlocks(prev => [...prev, { label: meta.label, code: meta.code }]);
+      } else if (evt.type === "artifact.preview") {
+        // Fired by dynamic_workflow.py right after artifact_store's
+        // register_artifact() — powers the document card in chat.
+        const meta = evt.meta || {};
+        setExecArtifact({
+          executionId: meta.execution_id || executionId,
+          filename: meta.filename,
+          fileType: meta.file_type,
+        });
+      } else if (evt.type === "execution.error") {
+        setExecStatus("error");
+        setExecError((evt.meta && evt.meta.error) || "Execution failed");
+      } else if (evt.type === "completed") {
+        setExecStatus("completed");
+        es.close();
+      }
+    };
+
+    es.onerror = () => {
+      // Connection dropped (e.g. server restarted) — stop trying rather
+      // than spamming reconnects against a request that already finished.
+      es.close();
+    };
+
+    return opened;
+  }, []);
+
+  useEffect(() => () => { if (execEventSourceRef.current) execEventSourceRef.current.close(); }, []);
   const openSourcesPanel = (sources, label) => {
     setSourcesPanelSources(sources || []);
     setSourcesPanelLabel(label ? label.slice(0, 100) : "");
     setSourcesPanelOpen(true);
+    setDocPanelOpen(false);
   };
 
   // ── Voice input (mic) — Urdu/English speech via Web Speech API ────────
   const [recording, setRecording] = useState(false);
   const [micLang, setMicLang]     = useState(() => localStorage.getItem("agribot_mic_lang") || "en-US");
   const recognitionRef = useRef(null);
-  const toggleMic = () => {
+  const toggleMic = (langOverride) => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) { alert("Voice input isn't supported in this browser. Try Chrome or Edge."); return; }
     if (recording) { recognitionRef.current?.stop(); return; }
     const recog = new SpeechRecognition();
-    recog.lang = micLang;
+    recog.lang = langOverride || micLang;
     recog.interimResults = true;
     recog.continuous = false;
     recog.onresult = (e) => {
@@ -583,6 +1101,14 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   const chatRef      = useRef(null);
   const textareaRef  = useRef(null);
   const fileInputRef = useRef(null);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const plusMenuRef = useRef(null);
+  useEffect(() => {
+    if (!plusMenuOpen) return;
+    const onClickOutside = (e) => { if (plusMenuRef.current && !plusMenuRef.current.contains(e.target)) setPlusMenuOpen(false); };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [plusMenuOpen]);
 
   const authHdr = () => token ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` } : { "Content-Type": "application/json" };
 
@@ -613,8 +1139,15 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
     }
   };
 
-  const openSession = (sessionId, projectId = null) => {
-    const apiS = apiSessions.find(s => s.session_id === sessionId);
+  // If mounted from Dashboard.jsx's "New chat" / "New project" boxes,
+  // auto-trigger the corresponding action once on mount.
+  useEffect(() => {
+    if (initialAction === "newChat") openNewChat(null);
+    else if (initialAction === "newProject") setShowNewProj(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openSession = (sessionId, projectId = null) => {    const apiS = apiSessions.find(s => s.session_id === sessionId);
     const title = apiS?.title || apiS?.preview || "Chat";
     const proj = projectId ? projects.find(p => p.id === projectId) : null;
     setActiveSession({ sessionId, projectId, title: proj ? `${proj.emoji} ${title}` : title });
@@ -641,17 +1174,71 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
     const q = (text || input).trim();
     if (!q || loading || !activeSession) return;
     setInput("");
-    const userMsg = { role: "user", content: q, ts: nowTs() };
+    const userMsg = {
+      role: "user", content: q, ts: nowTs(),
+      attachedFiles: uploadedFiles.map(f => ({ name: f.name })),
+      scopedToUpload: uploadedFiles.length > 0 && scopeToUpload,
+    };
     const sid = activeSession.sessionId;
     setMsgCache(prev => ({ ...prev, [sid]: [...(prev[sid] || []), userMsg] }));
     setLoading(true); setTrace(null);
+
+    // Generate the execution_id CLIENT-SIDE and subscribe to its SSE
+    // stream before the request goes out, so the agent tree is actually
+    // live instead of only appearing after /api/chat's blocking call
+    // returns. Falls back gracefully (no live tree, chat still works) if
+    // the browser lacks crypto.randomUUID (very old browsers only).
+    const clientExecutionId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID().replace(/-/g, "") : null;
+    if (clientExecutionId) { await subscribeToExecution(clientExecutionId); setExecPanelOpen(true); }
+
+    // Route document-generation requests to the Dynamic Harness endpoint
+    // instead of the fixed /api/chat pipeline — a plain heuristic on the
+    // query text, not a UI toggle, so nothing changes for ordinary
+    // questions (Section 29: additive, don't alter existing behavior).
+    // See api_server.py's /api/chat/dynamic for what runs on this path.
+    const isDocRequest = /\b(pdf|docx|document|report|generate a file|word doc)\b/i.test(q);
+    const endpoint = isDocRequest ? "/api/chat/dynamic" : "/api/chat";
+
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(endpoint, {
         method: "POST", headers: authHdr(),
-        body: JSON.stringify({ session_id: sid, query: q, force_web: webSearchOn }),
+        body: JSON.stringify({ session_id: sid, query: q, force_web: webSearchOn, execution_id: clientExecutionId, scope_to_upload: uploadedFiles.length > 0 && scopeToUpload }),
       });
       const data = await res.json();
-      const botMsg = { role: "assistant", content: data.response || "No response.", ts: nowTs(), sourceType: data.source_type, mcpTool: data.mcp_tool, sources: data.sources || [] };
+      // FIX: a non-2xx response (e.g. the dynamic harness returning 503
+      // before it ever creates agent state) still parses as JSON, so this
+      // was never being checked — it silently fell through to the generic
+      // "No response." with no clue what actually failed. Surface
+      // data.response (routes in this file always include one, even on
+      // error) or data.detail (FastAPI's default HTTPException shape) if
+      // present, before giving up and showing the generic fallback.
+      if (!res.ok && !data.response) {
+        throw new Error(data.detail || data.error_detail || `Request failed (${res.status})`);
+      }
+      // FIX: this used to build `artifact` ONLY from execArtifact, which
+      // is populated live by the SSE "artifact.preview" event handler.
+      // That event arrives on a SEPARATE connection from this fetch's
+      // response — a race, not a guarantee. data.artifacts is now
+      // included directly in /api/chat/dynamic's response body (see the
+      // api_server.py fix), so it's authoritative and race-free: prefer
+      // it, and only fall back to the live SSE value if the response
+      // body's artifacts array is somehow empty.
+      const responseArtifact = (data.artifacts && data.artifacts.length > 0)
+        ? (() => {
+            const a = data.artifacts[data.artifacts.length - 1];
+            return { executionId: clientExecutionId, filename: a.ref, fileType: a.type || "pdf" };
+          })()
+        : null;
+      const botMsg = {
+        role: "assistant", content: data.response || "No response.", ts: nowTs(),
+        sourceType: data.source_type, mcpTool: data.mcp_tool, sources: data.sources || [],
+        // Snapshot this execution's code.block / artifact.preview events
+        // (accumulated live via SSE above) onto the message they belong
+        // to, so they render inside THIS bubble permanently, not just
+        // while this was the "current" execution.
+        codeBlocks: isDocRequest ? execCodeBlocks : [],
+        artifact: isDocRequest ? (responseArtifact || execArtifact || null) : null,
+      };
       setMsgCache(prev => ({ ...prev, [sid]: [...(prev[sid] || []), botMsg] }));
       if (data.trace) setTrace(data.trace);
       // Auto-title
@@ -662,6 +1249,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
       }
     } catch (err) {
       setMsgCache(prev => ({ ...prev, [sid]: [...(prev[sid] || []), { role: "assistant", content: `❌ Backend error: ${err.message}`, ts: nowTs() }] }));
+      setExecStatus("error"); setExecError(err.message);
     } finally {
       setLoading(false); fetchSessions();
     }
@@ -688,14 +1276,20 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   // ── Export PDF ────────────────────────────────────────────────────
   const exportPDF = async () => {
     if (!activeSession) return;
+    const clientExecutionId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID().replace(/-/g, "") : null;
+    if (clientExecutionId) { await subscribeToExecution(clientExecutionId); setExecPanelOpen(true); }
     try {
-      const res = await fetch(`/api/sessions/${activeSession.sessionId}/export/pdf`, { headers: authHdr() });
+      const url = `/api/sessions/${activeSession.sessionId}/export/pdf` + (clientExecutionId ? `?execution_id=${clientExecutionId}` : "");
+      const res = await fetch(url, { headers: authHdr() });
       if (!res.ok) throw new Error(`Export failed (${res.status})`);
       const blob = await res.blob();
       const m = res.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/);
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = m ? m[1] : "agribot_export.pdf";
       document.body.appendChild(a); a.click(); a.remove();
-    } catch (err) { alert(`PDF export: ${err.message}`); }
+    } catch (err) {
+      alert(`PDF export: ${err.message}`);
+      setExecStatus("error"); setExecError(err.message);
+    }
   };
 
   // ── Project CRUD ──────────────────────────────────────────────────
@@ -743,10 +1337,11 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
             ╚══════════════════════════════════════════════════════════╝ */}
         <div style={{ width: sideWidth, minWidth: sideWidth, background: C.surface, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", transition: "width 0.22s ease, min-width 0.22s ease", overflow: "hidden", flexShrink: 0 }}>
           {sideOpen && (<>
-            {/* Logo */}
+            {/* Logo — click to go back to the Dashboard */}
             <div style={{ padding: "16px 14px 10px", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
-                <div style={{ fontSize: 22 }}>🌾</div>
+              <div onClick={onGoToDashboard} title="Go to Dashboard"
+                style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12, cursor: onGoToDashboard ? "pointer" : "default" }}>
+                <img src={agribotIcon} alt="AgriBot" style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0 }} />
                 <span style={{ fontSize: 16, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>AgriBot</span>
               </div>
               {/* Search */}
@@ -891,33 +1486,31 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                   {activeSession.projectId && <span style={{ fontSize: 11, color: C.textMute, flexShrink: 0 }}>· {projects.find(p => p.id === activeSession.projectId)?.name}</span>}
                 </>
               ) : (
-                <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>🌾 AgriBot</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>AgriBot</span>
               )}
             </div>
 
             {/* Header controls */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              {/* Chunk badge */}
-              <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: chunkCount > 0 ? C.accentBg : C.dangerBg, border: `1px solid ${chunkCount > 0 ? C.accentDim : C.danger}`, fontSize: 11, color: chunkCount > 0 ? C.accent : "#e74c3c" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: chunkCount > 0 ? C.accent : "#e74c3c", boxShadow: chunkCount > 0 ? `0 0 5px ${C.accent}` : "none" }} />
-                {chunkCount > 0 ? `${chunkCount.toLocaleString()} chunks` : "No index"}
-              </div>
-
-              {/* Web search toggle */}
-              <button onClick={() => setWebSearchOn(w => !w)} title={webSearchOn ? "Web search ON — click to disable" : "Enable web search (Tavily)"}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, border: `1px solid ${webSearchOn ? C.accent : C.border}`, background: webSearchOn ? C.accentBg : "transparent", cursor: "pointer", fontSize: 12, fontWeight: 600, color: webSearchOn ? C.accent : C.textSub, transition: "all 0.15s", fontFamily: "inherit" }}>
-                <Icon d={I.globe} size={13} stroke={webSearchOn ? C.accent : C.textSub} />
-                {webSearchOn ? "Web ON" : "Web"}
-              </button>
-
-              {/* Export PDF */}
-              {activeSession && (
-                <button onClick={exportPDF} title="Export session as PDF"
-                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 12, color: C.textSub, fontFamily: "inherit" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
-                  <Icon d={I.pdf} size={13} stroke={C.textSub} /> PDF
+              {/* Dashboard button */}
+              {onGoToDashboard && (
+                <button onClick={onGoToDashboard} title="Go to Dashboard"
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: C.textSub, fontFamily: "inherit" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textSub; }}>
+                  <Icon d={I.grid || I.folder} size={13} stroke="currentColor" />
+                  Dashboard
                 </button>
+              )}
+
+              {/* Web search status badge — read-only; toggle now lives in the
+                  "+" dropdown next to the composer, see below */}
+              {webSearchOn && (
+                <div title="Web search is ON — toggle it from the + menu next to the composer"
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, border: `1px solid ${C.accent}`, background: C.accentBg, fontSize: 12, fontWeight: 600, color: C.accent }}>
+                  <Icon d={I.globe} size={13} stroke={C.accent} />
+                  Web ON
+                </div>
               )}
 
               {/* Sources panel toggle */}
@@ -928,12 +1521,15 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                 <Icon d={I.sources} size={15} stroke={sourcesPanelOpen ? C.accent : C.textSub} />
               </button>
 
-              {/* Settings */}
-              <button onClick={() => setShowSettings(true)} title="Settings"
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", cursor: "pointer" }}
+              {/* Agent Execution panel toggle */}
+              <button onClick={() => setExecPanelOpen(o => !o)} title={execPanelOpen ? "Close agent execution panel" : "Open agent execution panel"}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, border: `1px solid ${execPanelOpen ? C.accent : C.border}`, background: execPanelOpen ? C.accentBg : "transparent", cursor: "pointer", position: "relative" }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
-                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
-                <Icon d={I.settings} size={15} stroke={C.textSub} />
+                onMouseLeave={e => e.currentTarget.style.borderColor = execPanelOpen ? C.accent : C.border}>
+                <Icon d={I.trace} size={15} stroke={execPanelOpen ? C.accent : C.textSub} />
+                {execStatus === "running" && (
+                  <span style={{ position: "absolute", top: 3, right: 3, width: 7, height: 7, borderRadius: "50%", background: C.accent, animation: "agriPulse 1.1s ease-in-out infinite" }} />
+                )}
               </button>
             </div>
           </div>
@@ -948,6 +1544,8 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
               <Message key={i} msg={m} C={C} token={token}
                 msgId={`${activeSession}-${i}`}
                 onShowSources={openSourcesPanel}
+                onOpenDocument={openDocumentViewer}
+                onExportPDF={m.role === "assistant" ? exportPDF : null}
                 onRegenerate={m.role === "assistant" ? () => { const prev = [...currentMsgs].reverse().find((x, j) => j > currentMsgs.length - 1 - i && x.role === "user"); if (prev) sendMessage(prev.content); } : null} />
             ))}
             {loading && <TypingDots C={C} />}
@@ -963,39 +1561,124 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                 {uploadStatus === "error"     && "✗ Upload failed"}
               </div>
             )}
-            {/* File chips */}
+            {/* File attachment cards — ChatGPT-style: icon square + filename + type */}
             {uploadedFiles.length > 0 && (
-              <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-                {uploadedFiles.map((f, i) => (
-                  <div key={f.fileId} style={{ display: "flex", alignItems: "center", gap: 5, background: C.accentBg, border: `1px solid ${C.accentDim}`, borderRadius: 20, padding: "2px 10px 2px 7px", fontSize: 11, color: C.textSub }}>
-                    <Icon d={I.file} size={11} stroke={C.accent} />
-                    <span>{f.name}</span>
-                    <button onClick={() => setUploadedFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: C.textMute, fontSize: 14, lineHeight: 1, padding: 0, marginLeft: 2 }}>×</button>
-                  </div>
-                ))}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {uploadedFiles.map((f, i) => (
+                    <div key={f.fileId}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: C.surface, border: `1px solid ${C.border}`,
+                        borderRadius: 12, padding: "9px 14px 9px 10px",
+                        maxWidth: 260, boxShadow: themeMode === "light" ? "0 1px 3px rgba(0,0,0,0.06)" : "0 1px 3px rgba(0,0,0,0.3)",
+                        position: "relative",
+                      }}>
+                      <div style={{
+                        width: 34, height: 34, borderRadius: 8, background: "rgba(224,54,42,0.1)",
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      }}>
+                        <Icon d={I.file} size={16} stroke="#e0362a" />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 12.5, fontWeight: 700, color: C.text,
+                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                        }} title={f.name}>
+                          {f.name}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: C.textMute, marginTop: 1 }}>PDF</div>
+                      </div>
+                      <button
+                        onClick={() => setUploadedFiles(prev => prev.filter((_, j) => j !== i))}
+                        title="Remove"
+                        style={{
+                          position: "absolute", top: -6, right: -6, width: 18, height: 18,
+                          borderRadius: "50%", background: C.textMute, color: C.surface,
+                          border: `2px solid ${C.surface}`, cursor: "pointer", fontSize: 11,
+                          lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
+                        }}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setScopeToUpload(v => !v)}
+                  title={scopeToUpload ? "Answers are scoped to this document only — click to also use the general knowledge base" : "Answers blend this document with the general knowledge base — click to scope to this document only"}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 7, padding: "2px 10px", borderRadius: 20, border: `1px solid ${scopeToUpload ? C.accent : C.border}`, background: scopeToUpload ? C.accentBg : "transparent", cursor: "pointer", fontSize: 11, fontWeight: 600, color: scopeToUpload ? C.accent : C.textMute, fontFamily: "inherit" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: scopeToUpload ? C.accent : C.textMute, flexShrink: 0 }} />
+                  {scopeToUpload ? "This document only" : "Document + knowledge base"}
+                </button>
               </div>
             )}
             {!activeSession && <div style={{ fontSize: 12, color: C.textMute, textAlign: "center", marginBottom: 8 }}>Click <strong style={{ color: C.accent }}>New chat</strong> or select a conversation</div>}
             <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-              {/* Upload */}
               <input ref={fileInputRef} type="file" accept=".pdf,.txt,.docx" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) { uploadFile(e.target.files[0]); e.target.value = ""; } }} />
-              <button onClick={() => activeSession && fileInputRef.current?.click()} disabled={!activeSession || uploadStatus === "uploading"} title="Upload PDF / TXT / DOCX"
-                style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${C.border}`, background: C.inputBg, cursor: !activeSession ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !activeSession ? 0.4 : 1, alignSelf: "flex-end" }}>
-                <Icon d={I.upload} size={16} stroke={uploadStatus === "uploading" ? C.amber : C.textSub} />
-              </button>
 
-              {/* Mic — voice input (Urdu/English via Web Speech API) */}
-              <div style={{ position: "relative", flexShrink: 0, alignSelf: "flex-end" }}>
-                <button onClick={() => activeSession && toggleMic()} disabled={!activeSession}
-                  title={recording ? "Stop recording" : `Speak (${micLang === "ur-PK" ? "Urdu" : "English"})`}
-                  style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${recording ? C.danger : C.border}`, background: recording ? C.dangerBg : C.inputBg, cursor: !activeSession ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: !activeSession ? 0.4 : 1 }}>
-                  <Icon d={I.mic} size={16} stroke={recording ? C.danger : C.textSub} />
-                </button>
-                {/* Tiny language toggle badge — click to switch EN/UR recognition */}
-                <button onClick={(e) => { e.stopPropagation(); toggleMicLang(); }} title="Toggle voice language (English / Urdu)"
-                  style={{ position: "absolute", bottom: -4, right: -4, width: 18, height: 18, borderRadius: 6, border: `1px solid ${C.border}`, background: C.surface, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7.5, fontWeight: 800, color: C.accent, padding: 0, lineHeight: 1 }}>
-                  {micLang === "ur-PK" ? "UR" : "EN"}
-                </button>
+              {/* "+" menu — Upload / Voice input (EN/UR) / Web search, all in one place */}
+              <div ref={plusMenuRef} style={{ position: "relative", flexShrink: 0, alignSelf: "flex-end" }}>
+                {recording ? (
+                  <button onClick={() => activeSession && toggleMic()} title="Stop recording"
+                    style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${C.danger}`, background: C.dangerBg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                    <Icon d={I.mic} size={16} stroke={C.danger} />
+                    <span style={{ position: "absolute", top: -3, right: -3, width: 9, height: 9, borderRadius: "50%", background: C.danger, animation: "agriPulse 1.1s ease-in-out infinite" }} />
+                  </button>
+                ) : (
+                  <button onClick={() => activeSession && setPlusMenuOpen(o => !o)} disabled={!activeSession} title="Attach, speak, or search the web"
+                    style={{ width: 40, height: 40, borderRadius: 10, border: `1px solid ${plusMenuOpen ? C.accent : C.border}`, background: plusMenuOpen ? C.accentBg : C.inputBg, cursor: !activeSession ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: !activeSession ? 0.4 : 1, transition: "all 0.15s" }}>
+                    <Icon d={I.plus} size={18} stroke={plusMenuOpen ? C.accent : C.textSub} />
+                  </button>
+                )}
+
+                {plusMenuOpen && (
+                  <div style={{
+                    position: "absolute", bottom: "calc(100% + 8px)", left: 0, width: 240,
+                    background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)", padding: 6, zIndex: 20,
+                  }}>
+                    <button onClick={() => { fileInputRef.current?.click(); setPlusMenuOpen(false); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <Icon d={I.upload} size={15} stroke={C.textSub} />
+                      <span style={{ fontSize: 13, color: C.text }}>Upload PDF / TXT / DOCX</span>
+                    </button>
+
+                    <button onClick={() => { setMicLang("en-US"); localStorage.setItem("agribot_mic_lang", "en-US"); setPlusMenuOpen(false); toggleMic("en-US"); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <Icon d={I.mic} size={15} stroke={C.textSub} />
+                      <span style={{ fontSize: 13, color: C.text }}>Voice input — English</span>
+                    </button>
+
+                    <button onClick={() => { setMicLang("ur-PK"); localStorage.setItem("agribot_mic_lang", "ur-PK"); setPlusMenuOpen(false); toggleMic("ur-PK"); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <Icon d={I.mic} size={15} stroke={C.textSub} />
+                      <span style={{ fontSize: 13, color: C.text }}>Voice input — Urdu</span>
+                    </button>
+
+                    <div style={{ height: 1, background: C.border, margin: "5px 4px" }} />
+
+                    <button onClick={() => { setWebSearchOn(w => !w); setPlusMenuOpen(false); }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "9px 10px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Icon d={I.globe} size={15} stroke={webSearchOn ? C.accent : C.textSub} />
+                        <span style={{ fontSize: 13, color: C.text }}>Web search</span>
+                      </span>
+                      <span style={{
+                        width: 32, height: 18, borderRadius: 10, background: webSearchOn ? C.accent : C.border,
+                        position: "relative", transition: "background 0.15s", flexShrink: 0,
+                      }}>
+                        <span style={{ position: "absolute", top: 2, left: webSearchOn ? 16 : 2, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Textarea */}
@@ -1027,6 +1710,32 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
           label={sourcesPanelLabel}
           C={C}
         />
+
+        {/* Right-side live Agent Execution panel */}
+        <AgentExecutionPanel
+          open={execPanelOpen}
+          onClose={() => setExecPanelOpen(false)}
+          executionId={execExecutionId}
+          nodes={execNodes}
+          execStatus={execStatus}
+          execError={execError}
+          C={C}
+        />
+
+        {/* Right-side Document Viewer panel — opened from a DocumentCard
+            in chat or from the Agent Execution panel's artifact. Same
+            slide-open slot pattern as Sources/Agent Execution above;
+            only one of the three is meaningfully open at once
+            (see openDocumentViewer). */}
+        <DocumentViewerPanel
+          open={docPanelOpen}
+          onClose={() => setDocPanelOpen(false)}
+          executionId={docPanelData?.executionId}
+          filename={docPanelData?.filename}
+          fileType={docPanelData?.fileType}
+          onViewAnalysis={setAnalysisExecId}
+          C={C}
+        />
       </div>
 
       {/* ── New Project Modal ── */}
@@ -1056,6 +1765,11 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
 
       {/* Settings modal */}
       <SettingsModal C={C} open={showSettings} onClose={() => setShowSettings(false)} username={username} email={email} themeMode={themeMode} setThemeMode={setThemeMode} />
+
+      {/* "View Analysis" modal — the code.block trail for one document */}
+      {analysisExecId && (
+        <AnalysisModal executionId={analysisExecId} onClose={() => setAnalysisExecId(null)} C={C} />
+      )}
     </>
   );
 }

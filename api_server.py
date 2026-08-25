@@ -1447,6 +1447,13 @@ Endpoints:
   GET  /api/logs               — recent pipeline logs (PostgreSQL)
   GET  /api/pdf/{filename}     — serve PDF inline
   POST /api/mcp/run            — MCP tool dispatcher
+  POST /api/chat/dynamic       — chat routed through the Dynamic Agent Harness
+                                  (capability planner/router/verifier) instead
+                                  of the fixed chat_workflow — for open-ended
+                                  document-generation requests
+  GET  /api/artifacts/{id}     — metadata + narrated code blocks for a
+                                  document the dynamic harness generated
+  GET  /api/artifacts/{id}/download — download that generated file
 """
 
 import os
@@ -1486,6 +1493,42 @@ import vector_store
 from rag_pipeline import AgenticRAGPipeline, inspect_last_query as _inspect
 from rag_pipeline import build_upload_chunks
 from auth_routes import router as auth_router, init_auth_schema
+
+# Harness workflow functions — used by /api/chat and PDF export below.
+# Imported at module load time (not inside the request handlers) so an
+# import error surfaces at startup, same as _PDF_EXPORT_AVAILABLE below,
+# rather than failing silently on the first real request.
+try:
+    from agent_harness.workflows.chat_workflow import run_chat_workflow
+    from agent_harness.workflows.report_workflow import run_report_workflow
+    from agent_harness import state as agent_state
+    _HARNESS_WORKFLOWS_AVAILABLE = True
+except Exception as _harness_import_err:
+    print(f"[HARNESS] workflow import failed: {_harness_import_err}")
+    _HARNESS_WORKFLOWS_AVAILABLE = False
+
+# ── Dynamic Agent Harness — capability planner/router/verifier, kept as
+# a SEPARATE opt-in path alongside the fixed chat_workflow above (Section
+# 29/30: additive, not a replacement). Imported the same defensive way —
+# an import error here disables only /api/chat/dynamic and the artifact
+# routes, /api/chat keeps working unchanged.
+try:
+    from agent_harness.workflows.dynamic_workflow import run_dynamic_workflow
+    from agent_harness.artifact_store import get_artifact
+    _DYNAMIC_HARNESS_AVAILABLE = True
+except Exception as _dynamic_harness_import_err:
+    # FIX: this used to print only str(exc), which for something like
+    # "attempted relative import beyond top-level package" gives zero
+    # indication of WHICH file/line actually caused it — every debugging
+    # round had to ask "please run this command to get a real traceback"
+    # instead of just showing it here. traceback.print_exc() prints the
+    # full chain (file, line, and the specific import statement) to the
+    # same terminal, once, right when it happens.
+    import traceback as _tb
+    print(f"[HARNESS] dynamic_workflow import failed: {_dynamic_harness_import_err}")
+    print("[HARNESS] full traceback:")
+    _tb.print_exc()
+    _DYNAMIC_HARNESS_AVAILABLE = False
 
 # ── Import project_routes only if the file exists ────────────────────────────
 try:
@@ -1570,6 +1613,12 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Execution-Id", "X-Export-Type"],  # so frontend JS can
+                                                           # read these off the
+                                                           # PDF export response
+                                                           # (fetch() hides
+                                                           # custom response
+                                                           # headers by default)
 )
 
 app.include_router(auth_router)
@@ -1779,6 +1828,18 @@ class ChatRequest(BaseModel):
     session_id: str
     query: str
     force_web: bool = False   # UI "Web Search ON" toggle — skip RAG, search live web
+    scope_to_upload: bool = False  # UI "Answer only from this document" toggle —
+                                    # when True and a file is attached to this
+                                    # session, retrieval skips the general
+                                    # knowledge base entirely. Default False =
+                                    # unchanged merged behavior.
+    execution_id: Optional[str] = None  # OPTIONAL: client-generated UUID, so the
+                                         # frontend can open /agent/events/{id} BEFORE
+                                         # sending this request and see truly live
+                                         # events instead of only learning execution_id
+                                         # after the whole (blocking) call finishes.
+                                         # Falls back to server-generated when omitted
+                                         # — existing callers are unaffected.
 
 class ChatResponse(BaseModel):
     response:    str
@@ -1787,6 +1848,8 @@ class ChatResponse(BaseModel):
     source_type: Optional[str]       = None   # "RAG" | "WEB" | "MCP" | "UPLOAD"
     mcp_tool:    Optional[str]       = None   # name of MCP tool if source_type=="MCP"
     sources:     Optional[List[dict]] = None  # structured sources for collapsed UI panel
+    execution_id: Optional[str]      = None   # agent_harness execution id — subscribe to
+                                               # /agent/events/{execution_id} for live trace
 
 class AsyncChatRequest(BaseModel):
     session_id:   str
@@ -1828,7 +1891,8 @@ RETRYABLE_ERRORS = (ConnectionError, ConnectionResetError,
 
 def run_pipeline_with_retry(pipeline, session_id, query,
                             upload_chunks=None, upload_file_ids=None,
-                            force_web=False, max_attempts=3):
+                            force_web=False, scope_to_upload=False, max_attempts=3,
+                            harness=None, agent_id=None, loop=None):
     last_exc = None
     for attempt in range(1, max_attempts + 1):
         try:
@@ -1838,6 +1902,8 @@ def run_pipeline_with_retry(pipeline, session_id, query,
                 upload_chunks=upload_chunks or [],
                 upload_file_ids=upload_file_ids or [],
                 force_web=force_web,
+                scope_to_upload=scope_to_upload,
+                harness=harness, agent_id=agent_id, loop=loop,
             )
         except RETRYABLE_ERRORS as exc:
             last_exc = exc
@@ -1857,17 +1923,88 @@ def run_pipeline_with_retry(pipeline, session_id, query,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Upload lookup — factored out for the Dynamic Harness's document_search
+#  capability (see run_dynamic_workflow's get_upload_chunks_fn param).
+#
+#  This is the SAME session-file / upload-metadata lookup _execute_query
+#  already does inline below (SESSION_FILES + _load_uploads, indexed vs.
+#  not-yet-indexed fallback) — duplicated here as its own function rather
+#  than refactoring _execute_query to call it, so the existing, already-
+#  working /api/chat path is not touched by this change at all.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _get_upload_chunks_for_session(session_id: str):
+    """Returns (upload_chunks, upload_file_ids) for a session — exactly
+    what pipeline.run() and the harness's document_search capability both
+    expect. Safe to call from a background thread (each call re-opens its
+    own file/metadata reads, no shared connection)."""
+    upload_chunks: List[dict] = []
+    upload_file_ids: List[str] = []
+    session_file_paths = SESSION_FILES.get(session_id, [])
+
+    _uploads_meta = {u["file_path"]: u for u in _load_uploads()
+                      if u.get("session_id") == session_id}
+
+    for fpath in session_file_paths:
+        if not os.path.exists(fpath):
+            continue
+        meta = _uploads_meta.get(fpath)
+        if meta and meta.get("status") == "indexed" and meta.get("file_id"):
+            upload_file_ids.append(meta["file_id"])
+        else:
+            try:
+                upload_chunks.extend(build_upload_chunks(fpath))
+            except Exception as e:
+                print(f"  [DYNAMIC_HARNESS] Could not load '{fpath}': {e}")
+
+    return upload_chunks, upload_file_ids
+
+
+def _get_llm_client(pipeline):
+    """
+    Resolves the project's existing LLMClient off the already-constructed
+    AgenticRAGPipeline instance, so the Dynamic Harness reuses the SAME
+    LLM backend config (Groq/Ollama/Qwen) instead of a second client.
+
+    ASSUMPTION FLAGGED: rag_pipeline.py wasn't in what I was given, so I
+    don't know the exact attribute name AgenticRAGPipeline stores its
+    LLMClient under. This tries the common ones a project like this
+    tends to use; if none match, fix the tuple below to the real
+    attribute name (check rag_pipeline.py's AgenticRAGPipeline.__init__)
+    — everything downstream (dynamic_harness.py, claim_verification.py's
+    calling convention) only needs `.call(system_prompt, user_prompt,
+    max_tokens, temperature)` to exist on whatever this returns.
+    """
+    for attr in ("llm", "llm_client", "llm_backend", "client"):
+        candidate = getattr(pipeline, attr, None)
+        if candidate is not None and hasattr(candidate, "call"):
+            return candidate
+    raise RuntimeError(
+        "Could not find an LLMClient on the AgenticRAGPipeline instance — "
+        "update _get_llm_client() in api_server.py with the real attribute "
+        "name from rag_pipeline.py's AgenticRAGPipeline.__init__."
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Core query executor (shared by sync + async paths)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _execute_query(session_id: str,
                    query: str,
-                   force_web: bool = False) -> tuple:
+                   force_web: bool = False,
+                   scope_to_upload: bool = False,
+                   harness=None, agent_id=None, loop=None) -> tuple:
     """
     Returns (response, trace, used_rag, source_type, mcp_tool, sources).
       source_type: "RAG" | "WEB" | "MCP" | "UPLOAD"
       mcp_tool:    name of the MCP tool if source_type=="MCP", else None
       sources:     structured sources list from PipelineResult.sources, or []
+
+    harness / agent_id / loop: OPTIONAL, passed through unchanged to
+    run_pipeline_with_retry() -> pipeline.run(). When None (existing
+    callers — /api/chat's non-agentic paths if any remain, scripts,
+    tests), behavior is identical to before these params existed.
     """
     if not force_web and vector_store.collection_size() == 0:
         return (
@@ -1928,6 +2065,8 @@ def _execute_query(session_id: str,
         upload_chunks=upload_chunks,
         upload_file_ids=upload_file_ids,
         force_web=force_web,
+        scope_to_upload=scope_to_upload,
+        harness=harness, agent_id=agent_id, loop=loop,
     )
 
     # ── FIX: pipeline.run() returns a PipelineResult object, not a plain
@@ -2104,7 +2243,7 @@ def _internal_env():
 def status():
     backend = os.environ.get("LLM_BACKEND", "groq").upper()
     model_map = {
-        "GROQ":        os.environ.get("GROQ_MODEL", "llama-3.1-8b-instant"),
+        "GROQ":        os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
         "QWEN_REMOTE": os.environ.get("QWEN_REMOTE_MODEL", "Qwen (remote)"),
         "QWEN_LOCAL":  "Qwen (local)",
         "OLLAMA":      os.environ.get("OLLAMA_MODEL", "ollama"),
@@ -2137,13 +2276,52 @@ def status():
 def chat(req: ChatRequest):
     t0 = time.time()
     try:
-        response, trace, used_rag, source_type, mcp_tool, sources = \
-            _execute_query(req.session_id, req.query, force_web=req.force_web)
+        # ── Routed through agent_harness ────────────────────────────────
+        # WHY: previously called _execute_query() directly, so the harness
+        # (router/events/execution_logger/state, already present in this
+        # codebase) never saw real chat traffic. _execute_query itself is
+        # UNCHANGED — same function, same AgenticRAGPipeline underneath —
+        # this just wraps that one call with harness tracing so every chat
+        # turn now shows up in agent_harness_executions.sqlite and on
+        # /agent/events/{execution_id} for live streaming, same as the
+        # PDF workflow below.
+        execution_id = None
+        if _HARNESS_WORKFLOWS_AVAILABLE:
+            execution_id = req.execution_id or uuid.uuid4().hex
+            agent_state.create_state(execution_id, workflow="chat",
+                                      meta={"session_id": req.session_id})
+            try:
+                harness_result = run_harness_workflow(
+                    run_chat_workflow(
+                        execution_id,
+                        {"session_id": req.session_id, "query": req.query,
+                         "force_web": req.force_web,
+                         "scope_to_upload": req.scope_to_upload},
+                        execute_fn=_execute_query,
+                    )
+                )
+                agent_state.set_status(execution_id, "done")
+            except Exception:
+                agent_state.set_status(execution_id, "error")
+                raise
+            response    = harness_result["response"]
+            trace       = harness_result["trace"]
+            used_rag    = harness_result["used_rag"]
+            source_type = harness_result["source_type"]
+            mcp_tool    = harness_result["mcp_tool"]
+            sources     = harness_result["sources"]
+        else:
+            # Harness workflow module failed to import at startup — degrade
+            # to the direct call rather than taking chat down entirely.
+            response, trace, used_rag, source_type, mcp_tool, sources = \
+                _execute_query(req.session_id, req.query, force_web=req.force_web,
+                                scope_to_upload=req.scope_to_upload)
+
         print(f"[CHAT] {time.time()-t0:.2f}s  "
               f"query={req.query[:60]!r}  "
               f"force_web={req.force_web}  "
               f"source={source_type}  used_rag={used_rag}  mcp_tool={mcp_tool}  "
-              f"sources={len(sources or [])}")
+              f"sources={len(sources or [])}  execution_id={execution_id}")
         # Belt-and-braces: never let a non-string reach the Pydantic model
         if not isinstance(response, str):
             response = getattr(response, "answer", None) or str(response)
@@ -2155,10 +2333,111 @@ def chat(req: ChatRequest):
             source_type=source_type,
             mcp_tool=mcp_tool,
             sources=sources or [],
+            execution_id=execution_id,
         )
     except Exception as exc:
         print("\n" + "="*70)
         print("[ERROR] /api/chat failed")
+        traceback.print_exc()
+        print("="*70 + "\n")
+        return JSONResponse(
+            status_code=500,
+            content={"response": _friendly_error(exc),
+                     "trace": None, "error_detail": str(exc)},
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Dynamic Agent Harness Chat — capability planner/router/verifier
+#
+#  Separate endpoint, NOT a change to /api/chat above. Same
+#  ChatRequest/ChatResponse shapes (session_id, query, execution_id,
+#  force_web, scope_to_upload in; response/sources/execution_id out) so
+#  AgriBot.jsx's sendMessage() can point at either URL with the same
+#  request body. Frontend routes here for document-generation-sounding
+#  queries and keeps using /api/chat for everything else.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/chat/dynamic")
+def chat_dynamic(req: ChatRequest):
+    t0 = time.time()
+    if not _DYNAMIC_HARNESS_AVAILABLE:
+        # FIX: previously `raise HTTPException(503, "...")` here — Starlette's
+        # default HTTPException handler returns {"detail": "..."}, which has
+        # no "response" key, so AgriBot.jsx's `data.response || "No response."`
+        # silently fell through to "No response." with zero indication of
+        # what actually broke. Returning the SAME shape every other failure
+        # path in this file uses (see /api/chat's except block above) means
+        # the real reason now actually reaches the chat bubble.
+        print("[CHAT/DYNAMIC] rejected — dynamic harness module failed to import at startup")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "response": "⚠️ Document generation isn't available yet — the "
+                            "dynamic harness module failed to load on the "
+                            "server. Check the server startup logs for a line "
+                            "starting with '[HARNESS] dynamic_workflow import "
+                            "failed:' — that names the missing file.",
+                "trace": None, "error_detail": "dynamic harness unavailable",
+            },
+        )
+
+    execution_id = req.execution_id or uuid.uuid4().hex
+    pipeline = get_pipeline()
+
+    try:
+        agent_state.create_state(execution_id, workflow="dynamic",
+                                  meta={"session_id": req.session_id})
+        try:
+            result = run_harness_workflow(
+                run_dynamic_workflow(
+                    execution_id,
+                    {"session_id": req.session_id, "query": req.query},
+                    pipeline=pipeline,
+                    llm=_get_llm_client(pipeline),
+                    get_upload_chunks_fn=_get_upload_chunks_for_session,
+                )
+            )
+            agent_state.set_status(execution_id, "done")
+        except Exception:
+            agent_state.set_status(execution_id, "error")
+            raise
+
+        print(f"[CHAT/DYNAMIC] {time.time()-t0:.2f}s  "
+              f"query={req.query[:60]!r}  status={result.get('status')}  "
+              f"artifacts={len(result.get('artifacts') or [])}  "
+              f"execution_id={execution_id}")
+        # FIX: task.errors was being collected all along but never
+        # printed or returned anywhere — a failed run gave zero visible
+        # reason beyond "status=failed". Print it whenever the run
+        # didn't fully succeed, so the terminal shows the real cause.
+        if result.get("status") != "completed" and result.get("errors"):
+            print(f"[CHAT/DYNAMIC] errors: {result.get('errors')}")
+
+        # FIX: this used to `return ChatResponse(...)` with
+        # response_model=ChatResponse on the route decorator — FastAPI
+        # silently STRIPS any field not declared on that Pydantic model
+        # before it ever reaches the client. ChatResponse doesn't declare
+        # an "artifacts" field (it was never meant to carry one — /api/chat
+        # doesn't produce files), so even though run_dynamic_workflow's
+        # result already contained the generated file's info, it never
+        # made it into the JSON body AgriBot.jsx received. Returning a
+        # plain dict (route decorator's response_model constraint removed
+        # above) keeps every existing field AND adds artifacts, without
+        # touching the shared ChatResponse model /api/chat still uses.
+        return {
+            "response": result.get("response") or "Task completed.",
+            "trace": None,
+            "used_rag": None,
+            "source_type": "DYNAMIC_HARNESS",
+            "mcp_tool": None,
+            "sources": result.get("sources") or [],
+            "artifacts": result.get("artifacts") or [],
+            "execution_id": execution_id,
+        }
+    except Exception as exc:
+        print("\n" + "="*70)
+        print("[ERROR] /api/chat/dynamic failed")
         traceback.print_exc()
         print("="*70 + "\n")
         return JSONResponse(
@@ -2491,7 +2770,7 @@ def export_session(session_id: str, format: str = "markdown"):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/api/sessions/{session_id}/export/pdf")
-def export_session_pdf(session_id: str):
+def export_session_pdf(session_id: str, execution_id: Optional[str] = None):
     """
     MCP PDF Export Tool
     -------------------
@@ -2504,6 +2783,12 @@ def export_session_pdf(session_id: str):
         → Converts HTML → PDF via weasyprint (falls back to HTML)
         → Browser triggers download
 
+    execution_id: OPTIONAL query param (?execution_id=...) — client-
+        generated UUID so the frontend can open /agent/events/{id}
+        BEFORE calling this endpoint and see the PDFAgent tree live,
+        same reasoning as ChatRequest.execution_id. Falls back to
+        server-generated when omitted.
+
     Install weasyprint for true PDF output:
         pip install weasyprint
     """
@@ -2511,13 +2796,46 @@ def export_session_pdf(session_id: str):
         raise HTTPException(503, "PDF export module not loaded on the server — "
                              "check startup logs for mcp_pdf_export import error.")
 
-    conn = db_schema.get_connection()
+    # FIX: mcp_generate_pdf now runs inside asyncio.to_thread (see
+    # run_report_workflow), which may execute on a different OS thread than
+    # this request handler. sqlite3.Connection objects can't cross threads,
+    # so the connection must be opened INSIDE the function that actually
+    # runs in that worker thread — not opened here and passed in.
+    def _generate_pdf_with_own_connection(sid: str) -> dict:
+        conn = db_schema.get_connection()
+        try:
+            return _mcp_pdf(sid, conn)
+        finally:
+            conn.close()
+
     try:
-        result = _mcp_pdf(session_id, conn)
+        # ── Routed through agent_harness ────────────────────────────────
+        # WHY: previously called mcp_generate_pdf() directly, bypassing the
+        # harness entirely ("Problem 2"). mcp_generate_pdf() itself is
+        # UNCHANGED — same rendering, same weasyprint fallback — this just
+        # traces the call the same way the chat workflow above does.
+        if _HARNESS_WORKFLOWS_AVAILABLE:
+            execution_id = execution_id or uuid.uuid4().hex
+            agent_state.create_state(execution_id, workflow="report",
+                                      meta={"session_id": session_id})
+            try:
+                result = run_harness_workflow(
+                    run_report_workflow(
+                        execution_id,
+                        {"session_id": session_id},
+                        generate_fn=_generate_pdf_with_own_connection,
+                    )
+                )
+                agent_state.set_status(execution_id, "done")
+            except Exception:
+                agent_state.set_status(execution_id, "error")
+                raise
+        else:
+            result = _generate_pdf_with_own_connection(session_id)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(500, f"PDF generation failed: {e}")
-    finally:
-        conn.close()
 
     if result["type"] == "error":
         raise HTTPException(404, result["detail"])
@@ -2530,6 +2848,7 @@ def export_session_pdf(session_id: str):
                 "Content-Disposition":
                     f'attachment; filename="{result["filename"]}"',
                 "X-Export-Type": "pdf",
+                "X-Execution-Id": execution_id or "",
             },
         )
     else:
@@ -2541,6 +2860,7 @@ def export_session_pdf(session_id: str):
                 "Content-Disposition":
                     f'attachment; filename="{result["filename"]}"',
                 "X-Export-Type": "html",
+                "X-Execution-Id": execution_id or "",
             },
         )
 
@@ -2601,7 +2921,7 @@ async def upload_file(
     sessionId:  Optional[str] = Form(None),
 ):
     """
-    Upload a PDF / TXT / DOCX (max 3 at any time).
+    Upload a document (max 3 at any time).
     Accepts `session_id` or `sessionId` from the frontend form.
     The file is:
       1. Saved to disk under user_uploads/
@@ -2613,12 +2933,17 @@ async def upload_file(
     resolved_session_id = session_id or sessionId or "global"
 
     # ── File type check ───────────────────────────────────────────────────
-    allowed = {".pdf", ".txt", ".docx"}
+    # FIX: _extract_text_from_path() (rag_pipeline.py) already handles all
+    # of these — Docling covers .pdf/.docx/.pptx with layout, python-docx
+    # covers .doc/.docx, and the plain-text fallback covers .md/.csv/.txt.
+    # This set only widens what the UPLOAD ENDPOINT accepts to match what
+    # extraction can already do — no new extraction code needed.
+    allowed = {".pdf", ".txt", ".docx", ".doc", ".md", ".csv", ".pptx"}
     fname   = file.filename or ""
     ext     = os.path.splitext(fname)[1].lower()
     if ext not in allowed:
         raise HTTPException(
-            400, f"File type '{ext}' not allowed. Supported: {', '.join(allowed)}")
+            400, f"File type '{ext}' not allowed. Supported: {', '.join(sorted(allowed))}")
 
     # ── Auto-purge previous uploads for this session so quota is never hit ────
     uploads = _load_uploads()
@@ -3053,6 +3378,41 @@ def serve_pdf(filename: str):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Generated document artifacts (Dynamic Harness) — DocumentCard / DocumentViewerPanel
+#  / AnalysisModal in AgriBot.jsx all read from these two routes.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/artifacts/{execution_id}")
+def get_artifact_meta(execution_id: str):
+    """Powers the DocumentCard + AnalysisModal — filename, type, and the
+    real code narrated while the document was generated (code_narration.py),
+    WITHOUT the file bytes."""
+    if not _DYNAMIC_HARNESS_AVAILABLE:
+        raise HTTPException(503, "Dynamic harness module not loaded on the server.")
+    art = get_artifact(execution_id)
+    if not art:
+        raise HTTPException(404, "artifact not found")
+    return {
+        "execution_id": art["execution_id"],
+        "filename": art["filename"],
+        "file_type": art["file_type"],
+        "code_blocks": json.loads(art["code_blocks"] or "[]"),
+    }
+
+
+@app.get("/api/artifacts/{execution_id}/download")
+def download_artifact(execution_id: str):
+    """Powers the Download link/button and the DocumentViewerPanel's
+    <iframe> preview — both point at this same URL."""
+    if not _DYNAMIC_HARNESS_AVAILABLE:
+        raise HTTPException(503, "Dynamic harness module not loaded on the server.")
+    art = get_artifact(execution_id)
+    if not art or not os.path.exists(art["path"]):
+        raise HTTPException(404, "file not found")
+    return FileResponse(art["path"], filename=art["filename"])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Serve React build
 # ═══════════════════════════════════════════════════════════════════════════════
 DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
@@ -3075,6 +3435,37 @@ try:
     print("[HARNESS] agent_harness.router included")
 except Exception as e:
     print(f"[HARNESS] agent_harness router failed to import: {e}")
+
+# ── Bridge for calling harness workflows (async) from sync endpoints ────────
+# WHY: /api/chat and /api/sessions/{id}/export/pdf are plain `def` (sync)
+# endpoints, which FastAPI runs in a worker thread — there's no running
+# event loop there. The harness's EventBus/SSE subscribers (/agent/events)
+# run on Uvicorn's single main event loop. Using asyncio.run() from the
+# worker thread would spin up a SEPARATE loop, and asyncio.Queue/Lock
+# objects don't safely wake up cross-loop waiters — an SSE subscriber could
+# silently never get woken even though the event was technically enqueued.
+# run_coroutine_threadsafe() schedules the coroutine onto the actual main
+# loop and blocks the worker thread for the result, so every harness event
+# is published and consumed on the same loop, always.
+import asyncio as _asyncio
+_HARNESS_LOOP = None
+
+@app.on_event("startup")
+async def _capture_harness_loop():
+    global _HARNESS_LOOP
+    _HARNESS_LOOP = _asyncio.get_running_loop()
+    print("[HARNESS] main event loop captured for workflow bridging")
+
+
+def run_harness_workflow(coro):
+    """Run an agent_harness workflow coroutine on the main loop from sync code."""
+    if _HARNESS_LOOP is None:
+        # Startup hook hasn't fired yet (e.g. called during import) — fall
+        # back to asyncio.run(); harmless for this one-off case since no
+        # SSE subscriber can exist before the server has started.
+        return _asyncio.run(coro)
+    future = _asyncio.run_coroutine_threadsafe(coro, _HARNESS_LOOP)
+    return future.result()
 
 if __name__ == "__main__":
 

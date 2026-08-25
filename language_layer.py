@@ -138,8 +138,50 @@ _FROM_ENGLISH_TO_URDU_SYSTEM = (
     "5. Output ONLY the Urdu translation. No English, no explanation, "
     "no transliteration, no quotation marks.\n"
     "6. Keep any [1] [2] [3] style citation numbers exactly as they appear "
-    "in the original text — do not translate or remove them."
+    "in the original text — do not translate or remove them.\n"
+    "7. Every single character in your output must be either: Urdu (Arabic "
+    "script), an ASCII digit, or basic punctuation (.,!?():-[]/%). NEVER "
+    "output Chinese, Japanese, Korean, or Cyrillic characters under any "
+    "circumstances, even for a technical term or code you're unsure how to "
+    "translate — if unsure, use the closest plain Urdu phrasing instead, or "
+    "transliterate the term into Urdu script rather than leaving it or any "
+    "part of it in another script."
 )
+
+_FROM_ENGLISH_TO_URDU_RETRY_SUFFIX = (
+    "\n\n8. IMPORTANT: A previous attempt at this exact translation "
+    "accidentally included characters from Chinese, Japanese, Korean, or "
+    "Cyrillic scripts. This is strictly forbidden and must not happen "
+    "again. Translate carefully — every character must be Urdu script, a "
+    "digit, or basic punctuation, with absolutely nothing from any other "
+    "script."
+)
+
+# Detects stray CJK / Hangul / Cyrillic characters that occasionally slip
+# into a Groq-generated Urdu translation — this is the exact failure mode
+# seen in production (e.g. "普ائش", "相対ی", "инфекیشن"): the model
+# briefly drifts into the wrong script mid-word while translating long,
+# technical, citation-heavy text. Not an NLLB artifact — this project
+# doesn't use NLLB; it's an LLM generation-degeneration issue, so the fix
+# has to be a deterministic post-generation check, not just prompt wording.
+_SCRIPT_CONTAMINATION_RE = re.compile(
+    r'[\u4E00-\u9FFF\u3400-\u4DBF'   # CJK Unified Ideographs (Chinese)
+    r'\u3040-\u30FF'                  # Hiragana + Katakana (Japanese)
+    r'\uAC00-\uD7AF'                  # Hangul (Korean)
+    r'\u0400-\u04FF]'                 # Cyrillic
+)
+
+
+def _has_script_contamination(text: str) -> bool:
+    return bool(_SCRIPT_CONTAMINATION_RE.search(text))
+
+
+def _strip_script_contamination(text: str) -> str:
+    """Last-resort cleanup if even the stricter retry still contaminates —
+    removes the stray characters rather than ever shipping them to the
+    user. A missing character or two reads far better than visible
+    mid-word garbage like '普ائش' or '相対ی'."""
+    return _SCRIPT_CONTAMINATION_RE.sub('', text)
 
 
 def _llm_translate(text: str, system_prompt: str, llm_client, max_tokens: int = 700) -> str:
@@ -184,7 +226,27 @@ def translate_from_english(text: str, detected_lang: str, llm_client) -> str:
     Translate the LLM's English answer back into the farmer's language.
     All non-English cases translate to NATIVE URDU SCRIPT (most accessible
     and avoids the ambiguity of romanized output).
+
+    Includes a deterministic safety net against script contamination
+    (stray Chinese/Japanese/Korean/Cyrillic characters the model
+    occasionally produces on long, technical, citation-heavy text): if
+    detected, retries once with a stricter prompt; if it still happens,
+    strips the offending characters rather than ever shipping garbage.
     """
     if detected_lang == "en":
         return text
-    return _llm_translate(text, _FROM_ENGLISH_TO_URDU_SYSTEM, llm_client, max_tokens=900)
+
+    translated = _llm_translate(text, _FROM_ENGLISH_TO_URDU_SYSTEM, llm_client, max_tokens=900)
+
+    if _has_script_contamination(translated):
+        print("[LANG] Script contamination detected in Urdu translation — retrying once with a stricter prompt")
+        translated = _llm_translate(
+            text, _FROM_ENGLISH_TO_URDU_SYSTEM + _FROM_ENGLISH_TO_URDU_RETRY_SUFFIX,
+            llm_client, max_tokens=900,
+        )
+
+    if _has_script_contamination(translated):
+        print("[LANG] Script contamination persisted after retry — stripping contaminated characters as a last resort")
+        translated = _strip_script_contamination(translated)
+
+    return translated

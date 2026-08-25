@@ -23,6 +23,10 @@ from PIL import Image
 from typing import List, Tuple
 # Note: using PyMuPDF (fitz) for direct text extraction; pytesseract (Tesseract) for OCR fallback
 
+_DEFAULT_TESSERACT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tesseract.exe")
+if os.path.exists(_DEFAULT_TESSERACT_PATH):
+    pytesseract.pytesseract.tesseract_cmd = _DEFAULT_TESSERACT_PATH
+
 
 # ── Chunking parameters ───────────────────────────────────────────────────────
 # Increased chunk size to produce more semantically-complete passages
@@ -40,13 +44,23 @@ def _extract_text_ocr(page: fitz.Page, dpi_scale: float = 2.5) -> str:
     """
     Rasterize a PDF page and run Tesseract OCR on it.
     dpi_scale=2.5 gives ~180 DPI — good balance of accuracy vs speed.
+
+    If the Tesseract binary is not installed on the host, catch the
+    specific error and return an empty string so indexing can continue.
     """
     mat = fitz.Matrix(dpi_scale, dpi_scale)
     pix = page.get_pixmap(matrix=mat)
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     # --psm 6 = assume a uniform block of text
-    text = pytesseract.image_to_string(img, config="--psm 6")
-    return text.strip()
+    try:
+        text = pytesseract.image_to_string(img, config="--psm 6")
+        return text.strip()
+    except pytesseract.pytesseract.TesseractNotFoundError:
+        print("[OCR] Tesseract binary not found in PATH — skipping OCR for this page.")
+        return ""
+    except Exception as e:
+        print(f"[OCR] Unexpected OCR error: {e} — skipping OCR for this page.")
+        return ""
 
 
 def _clean_text(text: str) -> str:

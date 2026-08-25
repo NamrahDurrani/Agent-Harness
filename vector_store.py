@@ -59,7 +59,7 @@ COLLECTION_NAME = os.environ.get("CHROMA_COLLECTION", "agriculture_docs")
 
 EMBEDDING_MODEL = os.environ.get(
     "EMBEDDING_MODEL",
-    "BAAI/bge-m3"   # 2.27 GB, best multilingual quality, needs disk space
+    "intfloat/multilingual-e5-base"   # 278 MB fallback, CPU-friendly multilingual (English/Urdu)
 )
 
 # ── Singletons ─────────────────────────────────────────────────────────────────
