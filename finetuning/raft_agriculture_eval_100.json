@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "eval_001",
+    "question": "What four main problem categories does FAO use to evaluate irrigation-water quality?",
+    "gold_answer": "Salinity, water infiltration rate, specific-ion toxicity, and miscellaneous effects.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 1.2/1.4, official FAO web edition",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_002",
+    "question": "What does ECw represent in FAO's irrigation-water guidelines?",
+    "gold_answer": "ECw is the electrical conductivity of irrigation water, used as a measure of water salinity and reported in dS/m.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1 notes, official FAO web edition",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_003",
+    "question": "What does the FAO Integrated Pest Management guidance mean by the Economic Threshold Level (ETL)?",
+    "gold_answer": "It is the pest level at which the expected benefit of control equals the losses caused by the pest; it is used to support an economic spray/no-spray decision.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO Plant Production and Protection Division, 'How to practice Integrated Pest Management', ETL section",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_004",
+    "question": "Which three rust diseases are identified as widespread and important cereal diseases in the FAO monitoring guideline?",
+    "gold_answer": "Yellow rust, leaf rust, and stem rust.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 25, 'The Rusts'",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_005",
+    "question": "Which two cereal pests are described as mainly damaging crops during seedling emergence?",
+    "gold_answer": "Hessian fly and barley flea beetle.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 11, monitoring timing",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_006",
+    "question": "Which five major crops account for about 87% of fertilizer consumption in the FAO Pakistan fertilizer-use survey?",
+    "gold_answer": "Wheat, cotton, sugar cane, rice, and maize.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6, official FAO web edition",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_007",
+    "question": "What does FAO identify as the key practice for controlling a water-quality-related salinity problem in irrigated agriculture?",
+    "gold_answer": "Leaching salts below the crop root zone.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 1.2.1 Salinity, official FAO web edition",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_008",
+    "question": "Which forms of nitrogen fertilizer does the FAO guidance say are more beneficial for rice?",
+    "gold_answer": "Ammoniacal forms, such as urea and ammonium sulphate.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Rice",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_009",
+    "question": "Why are the FAO government's general fertilizer recommendations usually given as ranges?",
+    "gold_answer": "The lower rates are for more fertile soils and the higher rates for poorer-fertility fields; factors such as previous crop, soil texture, irrigation source, and rainfall are also considered.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_010",
+    "question": "Which gene was transformed into two chickpea cultivars in PARC's herbicide-resistance work?",
+    "gold_answer": "The EPSPS herbicide-resistance gene.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 43, 'Genomics and Biotechnology'",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_011",
+    "question": "What was the stated origin of the dragon-fruit planting material introduced at PARC's Institute of Plant Introduction in Karachi?",
+    "gold_answer": "The material was described as South American in origin and was sent by the Karachi-based DUA Foundation.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 73, 'Introduction of dragon fruit'",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_012",
+    "question": "Which PARC centre initiated village-based seed production of high-yielding wheat and barley in Balochistan?",
+    "gold_answer": "The Balochistan Agricultural Research and Development Centre (BARDC), Quetta.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 83, 'Seed Production of High Yielding Wheat and Barley Varieties'",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_013",
+    "question": "What machine did PARC's Agricultural Engineering Institute develop for direct wheat planting in combine-harvested paddy fields?",
+    "gold_answer": "The Pak Seeder, also called the Combine Seeder.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 123, 'Rice residue management machinery for wheat sowing'",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_014",
+    "question": "From which fund does PARC's Agricultural Linkages Program receive funding?",
+    "gold_answer": "The Agricultural Research Endowment Fund (AREF).",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 133, 'Agricultural Linkages Program'",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_015",
+    "question": "What organizational units make up PARC's Coordination and Monitoring Division?",
+    "gold_answer": "Two directorates—the Directorate of Coordination and the Directorate of Human Resource Development—and the PARC Institute of Advanced Studies in Agriculture (PIASA).",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 143, 'Coordination and Monitoring Division'",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_016",
+    "question": "Which earlier rules were repealed when the Punjab Agriculture Department Extension & Adaptive Research Wing Service Rules, 2007 came into force?",
+    "gold_answer": "The Punjab Agriculture Department (Extension Wing/Economics & Marketing Wing) Service Rules, 1980.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 1, Rule 3",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_017",
+    "question": "Who is the appointing authority for the Director General Agriculture (Extension & Adaptive Research), BS-20, under the 2007 Punjab rules?",
+    "gold_answer": "The Chief Minister.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 2, Schedule item 1",
+    "category": "factual",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_018",
+    "question": "How is the Assistant Research Officer, BS-17, recruited under the Punjab rules?",
+    "gold_answer": "By initial recruitment.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 11, Schedule item 13",
+    "category": "factual",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_019",
+    "question": "How should a field survey be laid out to reduce edge effects when monitoring cereal diseases and pests?",
+    "gold_answer": "Enter about 20–30 m from the field edge and inspect at least 8–10 sites spaced roughly 25–50 m apart; if needed, survey diagonally or from two opposite corners.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 12",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_020",
+    "question": "How is disease prevalence calculated in the FAO cereal monitoring guideline?",
+    "gold_answer": "Count diseased plants and total plants in the samples, then calculate P = n × 100 / N.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 17, 'Main methods of disease monitoring'",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_021",
+    "question": "How does the FAO guideline recommend assessing bunt and smut prevalence in a field?",
+    "gold_answer": "Inspect at least 1,000 stems, using samples from at least 10 locations across the field, typically 100 plants per location.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 21, 'Bunt and smut diseases'",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_022",
+    "question": "After primary rust pustules are detected, how should the rust survey be conducted?",
+    "gold_answer": "Survey along a field diagonal or triangle, taking 20–25 equally spaced samples of 10 plants each, then score rust intensity using the modified Cobb scale.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 25, 'The Rusts'",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_023",
+    "question": "How does FAO recommend estimating the leaching requirement for a particular crop?",
+    "gold_answer": "Use the irrigation-water salinity (ECw) and the crop's tolerated soil salinity (ECe), then estimate LR with the crop-specific leaching-requirement equation; FAO recommends an ECe corresponding to at least about 90% yield.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 2.4.2-2.4.3, official FAO web edition",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_024",
+    "question": "What management response does FAO suggest when irrigation-water salinity becomes high enough that a sensitive crop would require impractically large leaching?",
+    "gold_answer": "Change to a more salt-tolerant crop so that less leaching is required to keep soil salinity within crop tolerance.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 2.4.3 Crop Tolerance to Salinity",
+    "category": "procedural",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_025",
+    "question": "What does FAO recommend when there is doubt about whether saline irrigation water can be used successfully for crop production?",
+    "gold_answer": "Conduct a pilot study to demonstrate irrigation feasibility and the outlook for economic success.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 2.4.3 Crop Tolerance to Salinity",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_026",
+    "question": "How is an Economic Threshold Level used to make an IPM spray decision?",
+    "gold_answer": "Compare the cost of control with the value of crop loss expected from the pest; at the ETL, the benefit of spraying equals the pest-caused loss.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO Plant Production and Protection Division, 'How to practice Integrated Pest Management', ETL section",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_027",
+    "question": "How should irrigation-water quality problems be analyzed when several problems occur together?",
+    "gold_answer": "FAO recommends considering each problem separately—its causative salts or constituents, crop-yield effects, expected long-term severity, and available management options—before combining them into a management plan.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 1.2/1.4, official FAO web edition",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_028",
+    "question": "How should fertilizer be split for normally planted wheat under the FAO guidance?",
+    "gold_answer": "Apply all phosphorus and potassium plus half the nitrogen before sowing; top-dress the remaining nitrogen with the first or second irrigation.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Wheat",
+    "category": "procedural",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_029",
+    "question": "How should nitrogen be applied to transplanted rice under the FAO fertilizer guidance?",
+    "gold_answer": "Apply half before transplanting with the basal fertilizer and the remaining half at panicle initiation, about 35–40 days after transplanting, on dry soil followed by flooding; avoid applying nitrogen into standing water.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Rice",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_030",
+    "question": "How does the FAO guidance split nitrogen for cotton?",
+    "gold_answer": "Apply one-third at sowing, one-third with the first irrigation, and the final one-third at the pre-flowering stage.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Cotton",
+    "category": "procedural",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_031",
+    "question": "How did PARC screen historical wheat varieties for drought tolerance under controlled pot conditions?",
+    "gold_answer": "PARC limited irrigation to 30% field capacity, monitored growth using the Zadoks scale, and recorded yield-related traits such as tillers, plant height, spike length, spikelets, 100-grain weight, and grain yield.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 53, genomic selection drought screening",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_032",
+    "question": "What quality-control sequence was reported for the revived PPR vaccine seed?",
+    "gold_answer": "The vaccine seed was revived using Vero cells and then checked for sterility, safety, potency, and identity.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 93, Project 2",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_033",
+    "question": "How are Agricultural Linkages Program projects recommended and finally approved for funding?",
+    "gold_answer": "Projects are competitively selected within NARS; the Technical Advisory Committee recommends projects, and the ALP Board of Directors gives final funding approval.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 133, 'Agricultural Linkages Program'",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_034",
+    "question": "Under the Punjab schedule, what happens for posts that specify promotion first but no suitable person is available for promotion?",
+    "gold_answer": "The post is filled by initial recruitment according to the qualification specified in Column 5.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, pp. 6-10, repeated fallback clause",
+    "category": "procedural",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_035",
+    "question": "How do FAO's general ECw categories distinguish no, slight-to-moderate, and severe salinity restriction for irrigation water?",
+    "gold_answer": "No restriction is below 0.7 dS/m, slight to moderate is 0.7–3.0 dS/m, and severe is above 3.0 dS/m.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1, official FAO web edition",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_036",
+    "question": "How do FAO's salinity-tolerance groups differ between sensitive and tolerant crops?",
+    "gold_answer": "Yield loss begins below about 1.3 dS/m ECe for sensitive crops, while tolerant crops begin losing yield at about 6.0–10.0 dS/m ECe.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 2.4.3, crop salinity-tolerance groups",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_037",
+    "question": "How does FAO fertilizer timing differ between normal irrigated wheat and rainfed wheat?",
+    "gold_answer": "For normal irrigated wheat, nitrogen is split while phosphorus and potassium are mainly applied before sowing; in rainfed areas, all fertilizer may be applied at sowing.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Wheat",
+    "category": "comparative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_038",
+    "question": "How does the FAO nitrogen schedule for cotton differ from the schedule for transplanted rice?",
+    "gold_answer": "Cotton nitrogen is divided into three equal applications—sowing, first irrigation, and pre-flowering—whereas rice uses half before transplanting and half at panicle initiation.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO official web edition, 'Fertilizer use by crop in Pakistan', Chapter 4, Cotton and Rice",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_039",
+    "question": "At Zadoks stages 30–39 and 49–60, how do the approximate economic thresholds for wheat leaf rust and stem rust compare?",
+    "gold_answer": "Leaf rust is about 1–5% at stages 30–39 and 5–10% at 49–60; stem rust is lower, about 0.1–1% and 1–5%, respectively.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, pp. 18-19, Table 2",
+    "category": "comparative",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_040",
+    "question": "How do the FAO rust-reaction categories 'R' and 'S' differ in severity?",
+    "gold_answer": "R means resistant, with severity up to about 5–10%; S means susceptible, with large pustules and severity up to about 75–100%.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 26",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_041",
+    "question": "How did farm-level fertilizer adoption differ for nitrogen, phosphate, and potash in the FAO Pakistan survey?",
+    "gold_answer": "About 92% of farmers applied nitrogen, 83% applied phosphate, but fewer than 2% applied potash.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6, fertilizer-use adoption",
+    "category": "comparative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_042",
+    "question": "How did fertilizer use differ between farmers with canal/tubewell irrigation and farmers in rainfed areas?",
+    "gold_answer": "Almost all farmers with canal or tubewell water used fertilizer, while only about half of farmers in rainfed areas did.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6, fertilizer-use adoption",
+    "category": "comparative",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_043",
+    "question": "How did the wheat and barley yield ranges compare in BARDC's village-based seed production?",
+    "gold_answer": "Wheat genotypes yielded about 1.5–3.3 tons per acre, while barley varieties yielded about 1.7–3.2 tons per acre.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 83",
+    "category": "comparative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_044",
+    "question": "How do NARC-Nargis-Yellow and NARC-Nargis-White differ in scape length and flowers per scape?",
+    "gold_answer": "NARC-Nargis-Yellow has a 27.7 cm scape with more than 7 flowers; NARC-Nargis-White has a 32 cm scape with more than 9 flowers.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 33, Floriculture",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_045",
+    "question": "How did PARC's two controlled drought-screening methods differ for historical wheat varieties?",
+    "gold_answer": "One used 15% PEG-induced drought stress; the other imposed drought in pots by limiting irrigation to 30% field capacity.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 53",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_046",
+    "question": "How did the number of active ALP projects compare with the number completed in 2023–24?",
+    "gold_answer": "There were 84 active projects and 20 projects completed during the fiscal year.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 133",
+    "category": "comparative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_047",
+    "question": "How do the age limits for a BS-18 Senior Subject Matter Specialist and a BS-17 Research Officer compare under the Punjab rules?",
+    "gold_answer": "The Senior Subject Matter Specialist is listed at 28–45 years, while the Research Officer is listed at 25–40 years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, pp. 8-10",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_048",
+    "question": "How do the age limits for a District Officer Agriculture (Extension) and an Assistant Research Officer compare?",
+    "gold_answer": "The District Officer is listed at 28–45 years; the Assistant Research Officer is listed at 21–35 years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, pp. 6 and 11",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_049",
+    "question": "For Agricultural Economist, BS-18, how do the PhD and MSc routes differ in required experience?",
+    "gold_answer": "The PhD route requires three years' experience in Adaptive Research and Extension; the MSc route requires five years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 7, Schedule item 6",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_050",
+    "question": "For Director of Agriculture (Extension) Headquarters, how do the PhD and MSc qualification routes differ in required experience?",
+    "gold_answer": "The PhD route requires at least eight years' Agriculture Extension experience, while the MSc route requires at least twelve years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 4",
+    "category": "comparative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_051",
+    "question": "Combine the PARC seed-production report with the FAO cereal-monitoring guideline: how much wheat and barley area did BARDC plant, and how often should cereal monitoring occur during a growing season?",
+    "gold_answer": "BARDC planted 300 acres of wheat and 10 acres of barley. The FAO guideline says field monitoring should be conducted at least 2–3 times during the growing season.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 83 + FAO_wheat_diseases_guide.pdf p. 11",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_052",
+    "question": "PARC used irrigation water with EC 3.2 dS/m for its dragon-fruit introduction. Under FAO's general irrigation-water salinity guideline, what restriction category does that EC fall into?",
+    "gold_answer": "It falls into the severe-restriction category, because FAO classifies ECw above 3.0 dS/m as severe.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 73 + FAO 'Water quality for agriculture', Table 1",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_053",
+    "question": "In PARC's quinoa trial, how many irrigations and how much total water per hectare were applied, and what ECw level does FAO classify as a severe salinity restriction?",
+    "gold_answer": "PARC applied five irrigations totaling 500 m³/ha per treatment. FAO classifies irrigation-water ECw above 3.0 dS/m as a severe salinity restriction.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 73 + FAO 'Water quality for agriculture', Table 1",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_054",
+    "question": "PARC imposed drought in wheat pots by limiting irrigation to 30% field capacity. What FAO water-quality effect can create a similar water-stress response even when water is physically present in the soil?",
+    "gold_answer": "Salinity can reduce the water available to the crop, producing drought-like water stress because plants cannot extract enough water from the salty soil solution.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 53 + FAO 'Water quality for agriculture', Section 1.2.1 Salinity",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_055",
+    "question": "PARC's Pak Seeder project promotes retaining and managing rice residue rather than burning it. What constraint does the FAO Pakistan fertilizer report give for why crop residues are often not recycled into soil?",
+    "gold_answer": "FAO says residues are often diverted for animal fodder and fuel because of economic needs, so they are not recycled into the soil.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 123 + FAO 'Fertilizer use by crop in Pakistan', Chapter 5, Crop residues",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_056",
+    "question": "How many years after the 2000 establishment of PARC's Agricultural Linkages Program were the Punjab Extension & Adaptive Research Wing Service Rules issued?",
+    "gold_answer": "Seven years later; ALP was established in 2000 and the Punjab rules were issued in 2007.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC PDF p. 133 + Punjab rules PDF p. 1",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_057",
+    "question": "What age range applies to a Punjab Assistant Research Officer, and how many active ALP projects did PARC report for 2023–24?",
+    "gold_answer": "The ARO age range is 21–35 years, and PARC reported 84 active ALP projects.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "Punjab rules PDF p. 11 + PARC PDF p. 133",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_058",
+    "question": "Who appoints the Punjab Director General Agriculture (Extension & Adaptive Research), and what three units make up PARC's Coordination and Monitoring Division?",
+    "gold_answer": "The Chief Minister is the appointing authority. PARC's division contains the Directorate of Coordination, the Directorate of Human Resource Development, and PIASA.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "Punjab rules PDF p. 2 + PARC PDF p. 143",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_059",
+    "question": "What location technology does the FAO cereal-monitoring guideline require, and what is the recruitment method for a Punjab Assistant Research Officer?",
+    "gold_answer": "The FAO guideline calls for GPS equipment to identify geographic locations; the Punjab ARO is filled by initial recruitment.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf p. 12 + Punjab rules PDF p. 11",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_060",
+    "question": "What ECw value marks the start of FAO's severe salinity-restriction category, and what age range applies to a Punjab Research Officer?",
+    "gold_answer": "Severe restriction starts above 3.0 dS/m ECw, and the Research Officer age range is 25–40 years.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1 + Punjab rules PDF p. 10",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_061",
+    "question": "What share of fertilizer consumption does FAO attribute to wheat in Pakistan, and to what level did PARC forecast wheat production to rise?",
+    "gold_answer": "FAO attributes about 45% of fertilizer consumption to wheat. PARC forecast wheat production to rise to 28,825.9 thousand tons.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6 + PARC PDF p. 113",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_062",
+    "question": "What approximate FAO economic threshold is given for wheat leaf rust at Zadoks 49–60, and what share of PARC's surveyed fields had leaf rust in its DEWAS survey?",
+    "gold_answer": "The FAO threshold is about 5–10%. PARC reported leaf rust in 122 of 423 fields, or 29%.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf pp. 18-19 + PARC Annual Report 2023-24, report p. 35, Wheat DEWAS",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_063",
+    "question": "How many sites or samples does the FAO guideline use for a post-detection rust survey, and how many NWDSN wheat lines did PARC screen?",
+    "gold_answer": "FAO specifies 20–25 samples of 10 plants each; PARC screened 914 NWDSN wheat lines.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf p. 25 + PARC Annual Report 2023-24, report p. 35, NWDSN/NUYT",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_064",
+    "question": "What recruitment split applies to Punjab BS-18 Senior Subject Matter Specialists, and how many ALP projects did PARC report as completed in 2023–24?",
+    "gold_answer": "The rules specify 10% by initial recruitment and 90% by promotion; PARC reported 20 completed ALP projects.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "Punjab rules PDF pp. 8-10 + PARC PDF p. 133",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_065",
+    "question": "Compare the percentage structure in two documents: what recruitment split applies to the Punjab District Officer Agriculture (Extension), and how is nitrogen split for cotton in the FAO guidance?",
+    "gold_answer": "The District Officer post is 10% initial recruitment and 90% promotion. Cotton nitrogen is split into three equal one-third applications.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "Punjab rules PDF p. 6 + FAO official web edition, Chapter 4, Cotton",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_066",
+    "question": "What wheat yield range did PARC report for BARDC's Balochistan seed-production work, and what nitrogen range does FAO list for irrigated wheat in Balochistan III?",
+    "gold_answer": "PARC reported about 1.5–3.3 tons per acre. FAO lists 90–120 kg N/ha for irrigated wheat in Balochistan III.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "PARC PDF p. 83 + FAO 'Fertilizer use by crop in Pakistan', Chapter 4, Table 4",
+    "category": "multi-hop",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_067",
+    "question": "When a long cereal-monitoring route crosses a uniform landscape, after roughly what distance can 1–2 field surveys be conducted?",
+    "gold_answer": "After about every 30–40 km.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 11",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_068",
+    "question": "How far into a cereal field should surveyors generally move from the edge to reduce edge effects?",
+    "gold_answer": "About 20–30 metres.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 12",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_069",
+    "question": "How many stationary plots are preferred in one to three farms for continuous cereal monitoring?",
+    "gold_answer": "Three to four stationary plots.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 13",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_070",
+    "question": "What approximate economic threshold is listed for common wild oat in cereal crops?",
+    "gold_answer": "About 10–15 plants per square metre.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 15, Table 1",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_071",
+    "question": "Once rust is detected, how many samples and plants per sample does the FAO guideline prescribe?",
+    "gold_answer": "Twenty to twenty-five samples, with 10 plants in each sample.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 25",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_072",
+    "question": "How many stems are analyzed at minimum for bunt and smut assessment?",
+    "gold_answer": "At least 1,000 stems.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 21",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_073",
+    "question": "What ECw value separates FAO's 'no restriction' and 'slight to moderate restriction' categories for irrigation-water salinity?",
+    "gold_answer": "0.7 dS/m.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_074",
+    "question": "Above what TDS level does FAO classify irrigation water as having a severe salinity restriction?",
+    "gold_answer": "Above 2,000 mg/L.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_075",
+    "question": "What pH range does FAO list as normal in its general irrigation-water quality guideline?",
+    "gold_answer": "6.5 to 8.4.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Table 1",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_076",
+    "question": "What zinc sulphate rate and timing does FAO recommend for transplanted rice?",
+    "gold_answer": "12.5 kg/ha of zinc sulphate containing 35% Zn, applied 7–10 days after transplanting.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 4, Rice",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_077",
+    "question": "At about how many days after rice transplanting does FAO place the panicle-initiation nitrogen application?",
+    "gold_answer": "About 35–40 days after transplanting.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 4, Rice",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_078",
+    "question": "What percentage of fertilizer consumption in Pakistan is attributed to the five major crops wheat, cotton, sugar cane, rice, and maize?",
+    "gold_answer": "About 87%.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_079",
+    "question": "What share of fertilizer consumption does wheat account for in the FAO Pakistan fertilizer-use survey?",
+    "gold_answer": "About 45%.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_080",
+    "question": "Approximately what percentage of farmers in the FAO Pakistan survey applied potash?",
+    "gold_answer": "Fewer than 2%.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Fertilizer use by crop in Pakistan', Chapter 6",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_081",
+    "question": "How many flower varieties had been developed by PARC's Floriculture Program in the report?",
+    "gold_answer": "Six varieties.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 33",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_082",
+    "question": "What maximum flower-head diameter is reported for NARC-Snow-1?",
+    "gold_answer": "8 cm.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 33",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_083",
+    "question": "How many dragon-fruit plants were initially sent to PARC, and what average fruit weight was reported for the initial crop?",
+    "gold_answer": "Twenty-eight plants were sent, and the average fruit weight was 370 grams.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 73",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_084",
+    "question": "How many acres of wheat and barley were planted in BARDC's village-based seed-production initiative?",
+    "gold_answer": "300 acres of wheat and 10 acres of barley.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 83",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_085",
+    "question": "What yield did farmers achieve for ispaghol at Kachi according to the PARC report?",
+    "gold_answer": "6 maunds per acre.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 83",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_086",
+    "question": "How many farmers, goats, and cattle were clinically examined in PARC's warble-fly project visits?",
+    "gold_answer": "225 farmers were involved, with 1,685 goats and 653 cattle examined.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 93",
+    "category": "numeric",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_087",
+    "question": "How many animal blood samples were collected for PARC's warble-fly analysis, and how were they split by species?",
+    "gold_answer": "595 samples: 500 from goats and 95 from cattle.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 93",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_088",
+    "question": "How many ALP projects were active in 2023–24, and what was their combined approved budget?",
+    "gold_answer": "84 projects, with a combined approved budget of Rs 759.02 million.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 133",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_089",
+    "question": "What age limits are listed for a Punjab Research Officer, BS-17?",
+    "gold_answer": "25 to 40 years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 10, Schedule item 12",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_090",
+    "question": "What age limits are listed for a Punjab Assistant Research Officer, BS-17?",
+    "gold_answer": "21 to 35 years.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 11, Schedule item 13",
+    "category": "numeric",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_091",
+    "question": "What is the official retail selling price of NARC-Snow-1 flowers or planting material?",
+    "gold_answer": "The corpus does not specify an official retail selling price.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 33",
+    "category": "negative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_092",
+    "question": "Which exact GPS brand and model must be used for FAO cereal monitoring?",
+    "gold_answer": "The corpus does not specify a GPS brand or model.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO_wheat_diseases_guide.pdf, p. 12",
+    "category": "negative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_093",
+    "question": "Which specific pesticide brand does the FAO IPM guidance require farmers to use once the Economic Threshold Level is reached?",
+    "gold_answer": "The corpus does not specify a required pesticide brand; the ETL guidance is a decision framework, not a brand prescription.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO Plant Production and Protection Division, 'How to practice Integrated Pest Management', ETL section",
+    "category": "negative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_094",
+    "question": "What monthly salary in rupees is fixed for the Punjab Assistant Research Officer, BS-17, by these service rules?",
+    "gold_answer": "The corpus does not specify a rupee salary amount for the post.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 11",
+    "category": "negative",
+    "difficulty": "easy",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_095",
+    "question": "How many candidates must be interviewed for appointment as Director General Agriculture under the 2007 Punjab rules?",
+    "gold_answer": "The corpus does not specify a required number of interview candidates.",
+    "source_document": "Punjab Agriculture Department rules",
+    "source_locator": "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf, p. 2",
+    "category": "negative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_096",
+    "question": "What is the per-hectare purchase price of the Pak Seeder reported by PARC?",
+    "gold_answer": "The corpus does not specify a purchase price for the Pak Seeder.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 123",
+    "category": "negative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_097",
+    "question": "What market price per kilogram did PARC receive for the dragon fruit harvested in its Karachi introduction trial?",
+    "gold_answer": "The corpus does not specify a market price for the harvested dragon fruit.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 73",
+    "category": "negative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_098",
+    "question": "Which single historical wheat variety did PARC declare the final best drought-tolerant variety after screening the 206 varieties?",
+    "gold_answer": "The corpus does not specify a single final best variety in that reported screening work.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 53",
+    "category": "negative",
+    "difficulty": "medium",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_099",
+    "question": "What single universal ECw value does FAO say will always cause crop damage regardless of crop, soil, climate, and management?",
+    "gold_answer": "The corpus does not specify a universal damage threshold; FAO states that irrigation-water suitability depends on the conditions of use, crop, soil, climate, and management.",
+    "source_document": "FAO crop guideline",
+    "source_locator": "FAO 'Water quality for agriculture', Section 1.2 Water Quality Problems",
+    "category": "negative",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  },
+  {
+    "id": "eval_100",
+    "question": "What guaranteed acceptance rate does PARC specify for new Agricultural Linkages Program funding proposals?",
+    "gold_answer": "The corpus does not specify a guaranteed proposal acceptance rate.",
+    "source_document": "PARC Annual Report 2023-24",
+    "source_locator": "PARC Annual Report 2023-24, PDF p. 133, ALP",
+    "category": "negative",
+    "difficulty": "hard",
+    "target_model": "Qwen/Qwen2.5-1.5B-Instruct"
+  }
+]
