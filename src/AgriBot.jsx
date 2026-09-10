@@ -62,7 +62,13 @@ const I = {
   export:    "M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13",
   bell:      "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",
   mic:       "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8",
+  more:      "M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM19 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM5 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
+  pin:       "M12 17v5M15 9.34V6a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.34a1 1 0 0 1-.4.8l-2.2 1.65a1 1 0 0 0-.4.8V15a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.41a1 1 0 0 0-.4-.8l-2.2-1.65a1 1 0 0 1-.4-.8z",
 };
+
+// Neutral, professional icon choices for project badges — replaces the
+// previous emoji picker (🌱🌾🪴…) with an actual SVG icon set.
+const PROJ_ICON_KEYS = ["folder", "book", "globe", "tool", "chat", "file", "search", "bell"];
 
 // ═══════════════════════════════════════════════════════════════════
 //  UTILITIES
@@ -170,7 +176,7 @@ function SourcesPanel({ open, onClose, sources, label, C }) {
           <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
             {(!sources || sources.length === 0) ? (
               <div style={{ color: C.textMute, fontSize: 12.5, textAlign: "center", marginTop: 40, lineHeight: 1.7 }}>
-                No sources for this answer.<br />Click the 📖 icon under any<br />AgriBot reply to view its references here.
+                No sources for this answer.<br />Click the sources icon under any<br />AgriBot reply to view its references here.
               </div>
             ) : (
               sources.map((s, i) => {
@@ -590,14 +596,12 @@ function Message({ msg, C, token, onRegenerate, onShowSources, onExportPDF, msgI
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start", gap: 4, maxWidth: "100%" }}>
-      {/* Label row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexDirection: isUser ? "row-reverse" : "row" }}>
-        <div style={{ width: 28, height: 28, borderRadius: "50%", background: isUser ? C.accentDim : C.surface2, border: `1.5px solid ${isUser ? C.accent : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: isUser ? 12 : 14 }}>
-          {isUser ? <Icon d={I.user} size={14} stroke={C.accent} /> : "🌾"}
-        </div>
-        <span style={{ fontSize: 11, color: C.textMute }}>
-          {isUser ? "You" : "AgriBot"} · {ts}
+      {/* Label row — plain text, no avatar icon */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: isUser ? C.accent : C.textSub }}>
+          {isUser ? "You" : "AgriBot"}
         </span>
+        <span style={{ fontSize: 11, color: C.textMute }}>· {ts}</span>
       </div>
 
       {/* Attached file card(s) — rendered ABOVE the bubble, like ChatGPT.
@@ -695,12 +699,15 @@ function Message({ msg, C, token, onRegenerate, onShowSources, onExportPDF, msgI
 // ═══════════════════════════════════════════════════════════════════
 function TypingDots({ C }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-      <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.surface2, border: `1.5px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🌾</div>
-      <div style={{ background: C.botBub, border: `1px solid ${C.border}`, borderRadius: "4px 16px 16px 16px", padding: "12px 16px", display: "flex", gap: 6, alignItems: "center" }}>
-        {[0, 0.2, 0.4].map((d, i) => (
-          <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: C.accentDim, animation: "agriPulse 1.2s ease-in-out infinite", animationDelay: `${d}s` }} />
-        ))}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: C.textSub }}>AgriBot</span>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 2px" }}>
+        <span style={{ fontSize: 13.5, color: C.textSub }}>Processing</span>
+        <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+          {[0, 0.2, 0.4].map((d, i) => (
+            <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: C.accentDim, animation: "agriPulse 1.2s ease-in-out infinite", animationDelay: `${d}s` }} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -756,7 +763,6 @@ function Welcome({ C, onSend, username }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", gap: 28 }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 52, marginBottom: 12 }}>🌾</div>
         <h2 style={{ fontSize: 26, fontWeight: 800, color: C.text, letterSpacing: "-0.03em", margin: "0 0 8px" }}>Welcome to AgriBot</h2>
         <p style={{ fontSize: 14, color: C.textSub, maxWidth: 440, lineHeight: 1.6, margin: 0 }}>
           {greeting}
@@ -780,8 +786,8 @@ function SettingsModal({ C, open, onClose, username, email, themeMode, setThemeM
   const [tab, setTab] = useState("profile");
   if (!open) return null;
   const themes = [
-    { id: "light",  label: "Light",  ic: "sun",     desc: "Light green interface" },
-    { id: "dark",   label: "Dark",   ic: "moon",    desc: "Dark green (default)" },
+    { id: "light",  label: "Light",  ic: "sun",     desc: "Light interface" },
+    { id: "dark",   label: "Dark",   ic: "moon",    desc: "Dark interface (default)" },
     { id: "system", label: "System", ic: "monitor", desc: "Follow OS preference" },
   ];
   return (
@@ -828,22 +834,23 @@ function SettingsModal({ C, open, onClose, username, email, themeMode, setThemeM
                   </div>
                 </div>
               ))}
-              <div style={{ marginTop: 20, padding: "12px 14px", background: C.accentBg, border: `1px solid ${C.accentDim}`, borderRadius: 10, fontSize: 12.5, color: C.textSub, lineHeight: 1.6 }}>
-                🌾 <strong style={{ color: C.accent }}>AgriBot</strong> — Agricultural Knowledge Assistant. Powered by Groq LLM, ChromaDB vector search, BM25 retrieval, RRF fusion, Tavily web search, and MCP tools.
+              <div style={{ marginTop: 20, padding: "12px 14px", background: C.accentBg, border: `1px solid ${C.accentDim}`, borderRadius: 10, fontSize: 12.5, color: C.textSub, lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <Icon d={I.book} size={14} stroke={C.accent} style={{ marginTop: 2, flexShrink: 0 }} />
+                <span><strong style={{ color: C.accent }}>AgriBot</strong> — Agricultural Knowledge Assistant. Powered by Groq LLM, ChromaDB vector search, BM25 retrieval, RRF fusion, Tavily web search, and MCP tools.</span>
               </div>
             </div>
           )}
           {tab === "appearance" && (
             <div>
               <div style={{ fontSize: 13, color: C.textSub, marginBottom: 18, lineHeight: 1.6 }}>
-                Choose your preferred color theme. <strong>Light</strong> uses a fresh light-green palette. <strong>Dark</strong> uses the original deep dark green. <strong>System</strong> follows your OS setting.
+                Choose your preferred color theme. <strong>Light</strong> uses a clean light palette. <strong>Dark</strong> uses a neutral dark palette. <strong>System</strong> follows your OS setting.
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {themes.map(t => (
                   <div key={t.id} onClick={() => setThemeMode(t.id)}
                     style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: themeMode === t.id ? C.accentBg : C.surface2, border: `2px solid ${themeMode === t.id ? C.accent : C.border}`, borderRadius: 12, cursor: "pointer", transition: "all 0.15s" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: t.id === "light" ? "#e8f4e0" : t.id === "dark" ? "#141c0f" : "linear-gradient(135deg,#e8f4e0 50%,#141c0f 50%)", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon d={I[t.ic]} size={18} stroke={t.id === "light" ? "#4a8a1e" : t.id === "dark" ? "#7ab648" : "#7ab648"} />
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: t.id === "light" ? "#f0f2ef" : t.id === "dark" ? "#161920" : "linear-gradient(135deg,#f0f2ef 50%,#161920 50%)", border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon d={I[t.ic]} size={18} stroke={t.id === "light" ? "#3f7d54" : t.id === "dark" ? "#4f9d6e" : "#4f9d6e"} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{t.label}</div>
@@ -868,8 +875,6 @@ function SettingsModal({ C, open, onClose, username, email, themeMode, setThemeM
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN AGRIBOT COMPONENT
 // ═══════════════════════════════════════════════════════════════════
-const PROJ_EMOJIS = ["🌱", "🌾", "🪴", "🌽", "🍃", "🌿", "🌻", "🌴", "🫘", "🍀"];
-
 export default function AgriBot({ username = "user", email = "", token, onLogout, onGoToDashboard, initialAction }) {
   // ── Theme ─────────────────────────────────────────────────────────
   const [themeMode, setThemeMode] = useState(() => localStorage.getItem("agribot_theme") || "dark");
@@ -883,7 +888,31 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   // ── Projects (localStorage) ───────────────────────────────────────
   const [projects, setProjects]   = useState(() => { try { return JSON.parse(localStorage.getItem(`agribot_projects_${username}`) || "[]"); } catch { return []; } });
   const [expandedPjs, setExpandedPjs] = useState(new Set());
+  const [projectsSectionOpen, setProjectsSectionOpen] = useState(true);
   const saveProjects = ps => { setProjects(ps); localStorage.setItem(`agribot_projects_${username}`, JSON.stringify(ps)); };
+
+  // ── Pinned chats (client-side; sessions themselves are server-owned) ──
+  const [pinnedSessionIds, setPinnedSessionIds] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem(`agribot_pinned_sessions_${username}`) || "[]")); } catch { return new Set(); } });
+  const savePinnedSessions = s => { setPinnedSessionIds(s); localStorage.setItem(`agribot_pinned_sessions_${username}`, JSON.stringify([...s])); };
+  const toggleSessionPin = (sid) => { const s = new Set(pinnedSessionIds); s.has(sid) ? s.delete(sid) : s.add(sid); savePinnedSessions(s); };
+
+  // Local title overrides for renamed chats, so the sidebar reflects a
+  // rename immediately (fetchSessions() also refreshes from the backend,
+  // which now has the same title via the /api/sessions/{id} PATCH call).
+  const [sessionTitleOverrides, setSessionTitleOverrides] = useState(() => { try { return JSON.parse(localStorage.getItem(`agribot_session_titles_${username}`) || "{}"); } catch { return {}; } });
+  const renameSession = async (sid, currentTitle) => {
+    const next = prompt("Rename chat", currentTitle || "");
+    if (!next || !next.trim() || next.trim() === currentTitle) return;
+    const title = next.trim();
+    setSessionTitleOverrides(prev => { const n = { ...prev, [sid]: title }; localStorage.setItem(`agribot_session_titles_${username}`, JSON.stringify(n)); return n; });
+    try { await fetch(`/api/sessions/${sid}`, { method: "PATCH", headers: authHdr(), body: JSON.stringify({ title }) }); } catch (_) {}
+    fetchSessions();
+  };
+  const shareSession = (sid) => {
+    const url = `${window.location.origin}${window.location.pathname}#/chat/${sid}`;
+    navigator.clipboard?.writeText(url);
+    alert("Shareable link copied to clipboard.");
+  };
 
   // ── Sessions ──────────────────────────────────────────────────────
   const [apiSessions, setApiSessions] = useState([]);
@@ -910,7 +939,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   const [showSettings, setShowSettings] = useState(false);
   const [showNewProj, setShowNewProj]   = useState(false);
   const [newProjName, setNewProjName]   = useState("");
-  const [newProjEmoji, setNewProjEmoji] = useState("🌱");
+  const [newProjIcon, setNewProjIcon]   = useState(PROJ_ICON_KEYS[0]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // ── Right-side Sources panel ────────────────────────────────────────
@@ -1130,8 +1159,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   // ── Session helpers ───────────────────────────────────────────────
   const openNewChat = (projectId = null) => {
     const sessionId = crypto.randomUUID();
-    const proj = projectId ? projects.find(p => p.id === projectId) : null;
-    const title = proj ? `${proj.emoji} New chat` : "New chat";
+    const title = "New chat";
     setActiveSession({ sessionId, projectId, title });
     setTrace(null); setInput(""); setUploadedFiles([]);
     if (projectId) {
@@ -1150,7 +1178,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   const openSession = (sessionId, projectId = null) => {    const apiS = apiSessions.find(s => s.session_id === sessionId);
     const title = apiS?.title || apiS?.preview || "Chat";
     const proj = projectId ? projects.find(p => p.id === projectId) : null;
-    setActiveSession({ sessionId, projectId, title: proj ? `${proj.emoji} ${title}` : title });
+    setActiveSession({ sessionId, projectId, title: sessionTitleOverrides[sessionId] || title });
     setTrace(null); setInput(""); setUploadedFiles([]);
     if (!msgCache[sessionId]) {
       fetch(`/api/sessions/${sessionId}`, { headers: authHdr() }).then(r => r.json()).then(d => {
@@ -1248,7 +1276,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
         setActiveSession(prev => ({ ...prev, title: autoTitle }));
       }
     } catch (err) {
-      setMsgCache(prev => ({ ...prev, [sid]: [...(prev[sid] || []), { role: "assistant", content: `❌ Backend error: ${err.message}`, ts: nowTs() }] }));
+      setMsgCache(prev => ({ ...prev, [sid]: [...(prev[sid] || []), { role: "assistant", content: `Backend error: ${err.message}`, ts: nowTs() }] }));
       setExecStatus("error"); setExecError(err.message);
     } finally {
       setLoading(false); fetchSessions();
@@ -1295,9 +1323,9 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
   // ── Project CRUD ──────────────────────────────────────────────────
   const createProject = () => {
     if (!newProjName.trim()) return;
-    const proj = { id: "p" + Date.now(), name: newProjName.trim(), emoji: newProjEmoji, sessions: [] };
+    const proj = { id: "p" + Date.now(), name: newProjName.trim(), icon: newProjIcon, pinned: false, sessions: [] };
     saveProjects([...projects, proj]);
-    setNewProjName(""); setNewProjEmoji("🌱"); setShowNewProj(false);
+    setNewProjName(""); setNewProjIcon(PROJ_ICON_KEYS[0]); setShowNewProj(false);
     setExpandedPjs(prev => new Set([...prev, proj.id]));
   };
 
@@ -1307,11 +1335,29 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
     if (activeSession?.projectId === id) setActiveSession(null);
   };
 
+  const renameProject = (id, currentName) => {
+    const next = prompt("Rename project", currentName || "");
+    if (!next || !next.trim() || next.trim() === currentName) return;
+    saveProjects(projects.map(p => p.id === id ? { ...p, name: next.trim() } : p));
+  };
+
+  const toggleProjectPin = (id) => {
+    saveProjects(projects.map(p => p.id === id ? { ...p, pinned: !p.pinned } : p));
+  };
+
+  const shareProject = (id) => {
+    const url = `${window.location.origin}${window.location.pathname}#/project/${id}`;
+    navigator.clipboard?.writeText(url);
+    alert("Shareable link copied to clipboard.");
+  };
+
   // ── Sidebar filtering ─────────────────────────────────────────────
   const sq = sideSearch.toLowerCase();
   const projSessionIds = new Set(projects.flatMap(p => (p.sessions || []).map(s => s.sessionId)));
   const recentSessions = apiSessions.filter(s => !projSessionIds.has(s.session_id) && (!sq || (s.title || s.preview || "").toLowerCase().includes(sq)));
   const filteredProjs  = projects.filter(p => !sq || p.name.toLowerCase().includes(sq));
+  const pinnedProjects = projects.filter(p => p.pinned);
+  const pinnedSessions = apiSessions.filter(s => pinnedSessionIds.has(s.session_id));
   const currentMsgs    = (activeSession && msgCache[activeSession.sessionId]) || [];
 
   const sideWidth = sideOpen ? 260 : 0;
@@ -1363,25 +1409,49 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
             </div>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "0 6px 8px" }}>
+              {/* Pinned — chats and projects the user pinned, shown first
+                  (mirrors the ChatGPT-style "Pinned" section) */}
+              {(pinnedProjects.length > 0 || pinnedSessions.length > 0) && (<>
+                <div style={{ padding: "8px 8px 4px", fontSize: 10, fontWeight: 700, color: C.textMute, textTransform: "uppercase", letterSpacing: "0.08em" }}>Pinned</div>
+                {pinnedProjects.map(proj => (
+                  <SideItem key={"pin-" + proj.id} label={proj.name} icon={I[proj.icon] || I.folder}
+                    active={activeSession?.projectId === proj.id} C={C}
+                    onClick={() => { setExpandedPjs(prev => new Set([...prev, proj.id])); setProjectsSectionOpen(true); }}
+                    menu={<RowMenu C={C} pinned onRename={() => renameProject(proj.id, proj.name)} onPin={() => toggleProjectPin(proj.id)} onShare={() => shareProject(proj.id)} onDelete={() => deleteProject(proj.id)} />} />
+                ))}
+                {pinnedSessions.map(s => (
+                  <SideItem key={"pin-" + s.session_id} label={sessionTitleOverrides[s.session_id] || s.title || s.preview || "Untitled"} icon={I.chat}
+                    active={activeSession?.sessionId === s.session_id} C={C}
+                    onClick={() => openSession(s.session_id, null)}
+                    menu={<RowMenu C={C} pinned onRename={() => renameSession(s.session_id, sessionTitleOverrides[s.session_id] || s.title || s.preview)} onPin={() => toggleSessionPin(s.session_id)} onShare={() => shareSession(s.session_id)} onDelete={(e) => deleteSession(s.session_id, e)} />} />
+                ))}
+              </>)}
+
               {/* Recent chats */}
               {recentSessions.length > 0 && (<>
                 <div style={{ padding: "8px 8px 4px", fontSize: 10, fontWeight: 700, color: C.textMute, textTransform: "uppercase", letterSpacing: "0.08em" }}>Recent Chats</div>
                 {recentSessions.map(s => (
-                  <SideItem key={s.session_id} label={s.title || s.preview || "Untitled"} icon={I.chat}
+                  <SideItem key={s.session_id} label={sessionTitleOverrides[s.session_id] || s.title || s.preview || "Untitled"} icon={I.chat}
                     active={activeSession?.sessionId === s.session_id} C={C}
                     onClick={() => openSession(s.session_id, null)}
-                    onDelete={e => deleteSession(s.session_id, e)} />
+                    pinned={pinnedSessionIds.has(s.session_id)}
+                    menu={<RowMenu C={C} pinned={pinnedSessionIds.has(s.session_id)} onRename={() => renameSession(s.session_id, sessionTitleOverrides[s.session_id] || s.title || s.preview)} onPin={() => toggleSessionPin(s.session_id)} onShare={() => shareSession(s.session_id)} onDelete={(e) => deleteSession(s.session_id, e)} />} />
                 ))}
               </>)}
 
-              {/* Projects */}
+              {/* Projects — collapsible dropdown; each project expands to
+                  reveal its chat history, and every project/chat row has
+                  Rename / Pin / Share / Delete via its "…" menu. */}
               <div style={{ padding: "12px 8px 4px", fontSize: 10, fontWeight: 700, color: C.textMute, textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>Projects</span>
+                <div onClick={() => setProjectsSectionOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                  <Icon d={projectsSectionOpen ? I.chevD : I.chevR} size={11} stroke={C.textMute} />
+                  <span>Projects</span>
+                </div>
                 <button onClick={() => setShowNewProj(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: C.accent }}>
                   <Icon d={I.plus} size={13} stroke={C.accent} />
                 </button>
               </div>
-              {filteredProjs.map(proj => {
+              {projectsSectionOpen && filteredProjs.map(proj => {
                 const isExp = expandedPjs.has(proj.id);
                 const isAct = activeSession?.projectId === proj.id;
                 return (
@@ -1389,23 +1459,27 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                     <div style={{ display: "flex", alignItems: "center", margin: "1px 0", borderRadius: 8, background: isAct ? C.accentBg : "transparent", overflow: "hidden" }}>
                       <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, padding: "7px 8px 7px 10px", cursor: "pointer", color: isAct ? C.accent : C.textSub, fontSize: 13, fontWeight: isAct ? 600 : 400, overflow: "hidden" }}
                         onClick={() => { setExpandedPjs(prev => new Set([...prev, proj.id])); }}>
-                        <span style={{ fontSize: 15, flexShrink: 0 }}>{proj.emoji}</span>
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{proj.name}</span>
+                        <Icon d={I[proj.icon] || I.folder} size={14} stroke={isAct ? C.accent : C.textSub} />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{proj.name}</span>
+                        {proj.pinned && <Icon d={I.pin} size={11} stroke={C.textMute} style={{ flexShrink: 0 }} />}
                       </div>
+                      <RowMenu C={C} pinned={proj.pinned} onRename={() => renameProject(proj.id, proj.name)} onPin={() => toggleProjectPin(proj.id)} onShare={() => shareProject(proj.id)} onDelete={() => deleteProject(proj.id)} />
                       <button onClick={() => setExpandedPjs(prev => { const s = new Set(prev); s.has(proj.id) ? s.delete(proj.id) : s.add(proj.id); return s; })} style={{ background: "none", border: "none", cursor: "pointer", padding: "7px 8px", color: C.textMute }}>
                         <Icon d={isExp ? I.chevD : I.chevR} size={12} stroke={C.textMute} />
-                      </button>
-                      <button onClick={() => deleteProject(proj.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: "7px 6px", color: C.textMute, opacity: 0.5 }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                        <Icon d={I.trash} size={11} stroke={C.danger} />
                       </button>
                     </div>
                     {isExp && (
                       <div style={{ paddingLeft: 8 }}>
                         {(proj.sessions || []).map(sess => {
                           const apiS = apiSessions.find(a => a.session_id === sess.sessionId);
-                          return <SideItem key={sess.sessionId} label={apiS?.title || apiS?.preview || sess.title || "Chat"} icon={I.chat} indent active={activeSession?.sessionId === sess.sessionId} C={C} onClick={() => openSession(sess.sessionId, proj.id)} onDelete={e => deleteSession(sess.sessionId, e)} />;
+                          const label = sessionTitleOverrides[sess.sessionId] || apiS?.title || apiS?.preview || sess.title || "Chat";
+                          return (
+                            <SideItem key={sess.sessionId} label={label} icon={I.chat} indent
+                              active={activeSession?.sessionId === sess.sessionId} C={C}
+                              onClick={() => openSession(sess.sessionId, proj.id)}
+                              pinned={pinnedSessionIds.has(sess.sessionId)}
+                              menu={<RowMenu C={C} pinned={pinnedSessionIds.has(sess.sessionId)} onRename={() => renameSession(sess.sessionId, label)} onPin={() => toggleSessionPin(sess.sessionId)} onShare={() => shareSession(sess.sessionId)} onDelete={(e) => deleteSession(sess.sessionId, e)} />} />
+                          );
                         })}
                         <div onClick={() => openNewChat(proj.id)}
                           style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 8px 5px 20px", cursor: "pointer", color: C.textMute, fontSize: 12, borderRadius: 7 }}
@@ -1419,18 +1493,6 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                 );
               })}
 
-              {/* Knowledge base links */}
-              <div style={{ padding: "12px 8px 4px", fontSize: 10, fontWeight: 700, color: C.textMute, textTransform: "uppercase", letterSpacing: "0.08em" }}>Knowledge Base</div>
-              {[["PARC Report 2023-24", "PARC Annual Report 2023-24_compressed.pdf"], ["FAO Crop Guidelines", "i5550e.pdf"], ["Punjab Agri Rules", "PbAgriDeptExtenAdapReseWing_SR_2007_20070612.pdf"]].map(([label, file]) => (
-                <div key={file} onClick={() => window.open(`/api/pdf/${encodeURIComponent(file)}`, "_blank")}
-                  style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 8px 5px 12px", cursor: "pointer", color: C.textMute, fontSize: 12, borderRadius: 7 }}
-                  onMouseEnter={e => e.currentTarget.style.color = C.accent}
-                  onMouseLeave={e => e.currentTarget.style.color = C.textMute}>
-                  <Icon d={I.book} size={13} stroke="currentColor" />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-                  <span style={{ fontSize: 10, color: C.accentDim }}>↗</span>
-                </div>
-              ))}
             </div>
 
             {/* User footer */}
@@ -1478,6 +1540,13 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
                 <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
+
+            {/* Logo — always visible at the top-left of the app, even when
+                the sidebar (which has its own logo) is collapsed */}
+            {!sideOpen && (
+              <img src={agribotIcon} alt="AgriBot" style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0, cursor: onGoToDashboard ? "pointer" : "default" }}
+                onClick={onGoToDashboard} title="Go to Dashboard" />
+            )}
 
             <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
               {activeSession ? (
@@ -1556,7 +1625,7 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
             {/* Upload status */}
             {uploadStatus && (
               <div style={{ marginBottom: 8, padding: "5px 12px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 6, background: uploadStatus === "done" ? C.accentBg : uploadStatus === "error" ? C.dangerBg : C.amberBg, border: `1px solid ${uploadStatus === "done" ? C.accentDim : uploadStatus === "error" ? C.danger : C.amberDim}`, color: uploadStatus === "done" ? C.accent : uploadStatus === "error" ? "#e8938a" : C.amber }}>
-                {uploadStatus === "uploading" && "⏳ Uploading & indexing…"}
+                {uploadStatus === "uploading" && "Uploading & indexing…"}
                 {uploadStatus === "done"      && "✓ Document ready — ask about it now"}
                 {uploadStatus === "error"     && "✗ Upload failed"}
               </div>
@@ -1746,7 +1815,12 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: C.textSub, marginBottom: 6, fontWeight: 600 }}>ICON</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {PROJ_EMOJIS.map(e => <button key={e} onClick={() => setNewProjEmoji(e)} style={{ fontSize: 18, padding: "4px 8px", borderRadius: 8, border: `1px solid ${newProjEmoji === e ? C.accent : C.border}`, background: newProjEmoji === e ? C.accentBg : C.surface2, cursor: "pointer", fontFamily: "inherit" }}>{e}</button>)}
+                {PROJ_ICON_KEYS.map(k => (
+                  <button key={k} onClick={() => setNewProjIcon(k)}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, padding: 0, borderRadius: 8, border: `1px solid ${newProjIcon === k ? C.accent : C.border}`, background: newProjIcon === k ? C.accentBg : C.surface2, cursor: "pointer", fontFamily: "inherit" }}>
+                    <Icon d={I[k]} size={15} stroke={newProjIcon === k ? C.accent : C.textSub} />
+                  </button>
+                ))}
               </div>
             </div>
             <div style={{ marginBottom: 20 }}>
@@ -1775,21 +1849,53 @@ export default function AgriBot({ username = "user", email = "", token, onLogout
 }
 
 // ── Sidebar item helper ────────────────────────────────────────────
-function SideItem({ label, icon, active, onClick, onDelete, C, indent = false }) {
+function SideItem({ label, icon, active, onClick, C, indent = false, menu, pinned }) {
   const [hover, setHover] = useState(false);
   return (
     <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ display: "flex", alignItems: "center", margin: "1px 0", borderRadius: 8, background: active ? C.accentBg : hover ? C.surface2 : "transparent", overflow: "hidden" }}>
       <div onClick={onClick} style={{ flex: 1, display: "flex", alignItems: "center", gap: 7, padding: `6px 8px 6px ${indent ? 22 : 10}px`, cursor: "pointer", color: active ? C.accent : C.textSub, fontSize: 12.5, fontWeight: active ? 600 : 400, overflow: "hidden" }}>
         <Icon d={icon} size={13} stroke={active ? C.accent : C.textSub} />
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{label}</span>
+        {pinned && <Icon d={I.pin} size={11} stroke={C.textMute} style={{ flexShrink: 0 }} />}
       </div>
-      {hover && onDelete && (
-        <button onClick={onDelete} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px 8px", color: C.textMute, opacity: 0.6, flexShrink: 0 }}
-          onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-          onMouseLeave={e => e.currentTarget.style.opacity = "0.6"}>
-          <Icon d={I.trash} size={11} stroke={C.danger} />
-        </button>
+      {(hover || pinned) && menu}
+    </div>
+  );
+}
+
+// ── Row "…" menu — Rename / Pin / Share / Delete, used by both chat
+//    rows and project rows so both get the same set of actions. ────
+function RowMenu({ C, pinned, onRename, onPin, onShare, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const items = [
+    ["Rename", I.edit, onRename, false],
+    [pinned ? "Unpin" : "Pin", I.pin, onPin, false],
+    ["Share", I.share, onShare, false],
+    ["Delete", I.trash, onDelete, true],
+  ];
+  return (
+    <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ background: "none", border: "none", cursor: "pointer", padding: "6px 7px", color: C.textMute, opacity: 0.7 }}
+        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+        onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}>
+        <Icon d={I.more} size={13} stroke="currentColor" />
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 199 }} />
+          <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 2, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, boxShadow: C.shadow, overflow: "hidden", zIndex: 200, minWidth: 148 }}>
+            {items.map(([label, ic, action, danger]) => (
+              <button key={label} onClick={(e) => { setOpen(false); action?.(e); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "none", border: "none", cursor: "pointer", color: danger ? C.danger : C.textSub, fontSize: 12.5, fontFamily: "inherit", textAlign: "left" }}
+                onMouseEnter={e => e.currentTarget.style.background = C.surface2}
+                onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                <Icon d={ic} size={13} stroke="currentColor" />{label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

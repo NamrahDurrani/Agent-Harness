@@ -19,6 +19,20 @@ import { useState, useEffect } from "react";
 import { getThemeColors } from "./theme";
 import agribotIcon from "./assets/agribot-icon.png";
 
+// Small inline icon set (mirrors AgriBot.jsx's Icon/I so both files render
+// identical, non-emoji iconography instead of relying on OS emoji fonts).
+const Icon = ({ d, size = 16, stroke, style: sx = {} }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+    style={{ flexShrink: 0, ...sx }}>
+    <path d={d} />
+  </svg>
+);
+const ICON_PATHS = {
+  chat:   "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+  folder: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z",
+};
+
 function pickGreeting() {
   const h = new Date().getHours();
   if (h < 5)  return "Working late? Ask away — crops, weather, prices, all of it.";
@@ -39,8 +53,8 @@ function ActionBox({ icon, title, subtitle, onClick, C }) {
       }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = C.accentBg; e.currentTarget.style.transform = "translateY(-1px)"; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; e.currentTarget.style.transform = "translateY(0)"; }}>
-      <div style={{ width: 44, height: 44, borderRadius: 12, background: C.accentDim, border: `1px solid ${C.accent}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20 }}>
-        {icon}
+      <div style={{ width: 44, height: 44, borderRadius: 12, background: C.accentDim, border: `1px solid ${C.accent}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon d={ICON_PATHS[icon]} size={20} stroke="#fff" />
       </div>
       <div>
         <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>{title}</div>
@@ -96,8 +110,8 @@ export default function Dashboard({ username = "", email = "", onNewChat, onNewP
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, width: "100%" }}>
-          <ActionBox icon="💬" title="New chat" subtitle="Ask a fresh agriculture question" onClick={onNewChat} C={C} />
-          <ActionBox icon="📁" title="New project" subtitle="Group related chats together" onClick={onNewProject} C={C} />
+          <ActionBox icon="chat" title="New chat" subtitle="Ask a fresh agriculture question" onClick={onNewChat} C={C} />
+          <ActionBox icon="folder" title="New project" subtitle="Group related chats together" onClick={onNewProject} C={C} />
         </div>
 
         <div style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 16, background: C.surface, padding: "20px 26px" }}>

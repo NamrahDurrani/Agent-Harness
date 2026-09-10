@@ -325,22 +325,22 @@ import agribotIcon from "./assets/agribot-icon.png";
  *    check that App.jsx doesn't recreate AuthPage's key on every render).
  */
 
-// ── Palettes — mirrors ProjectManager.jsx exactly (same keys, same values) ────
+// ── Palettes — mirrors theme.js's DARK/LIGHT exactly (same keys, same values) ────
 const PALETTES = {
   dark: {
-    bg: "#0c1108", surface: "#141c0f", surface2: "#1c2614",
-    border: "#2a3d1e", borderHi: "#3d5a2a",
-    accent: "#7ab648", accentDim: "#4a7a1e",
-    amber: "#e8a020", amberDim: "#7a4e00",
-    text: "#dde8cc", textSub: "#7a9460", textMute: "#4a6035",
-    danger: "#c0392b",
+    bg: "#0f1115", surface: "#161920", surface2: "#1e222b",
+    border: "#2a2f3a", borderHi: "#3a4150",
+    accent: "#4f9d6e", accentDim: "#3a7551",
+    amber: "#d1a13c", amberDim: "#8a6b1f",
+    text: "#e8eaed", textSub: "#9aa1ad", textMute: "#5f6672",
+    danger: "#e5555a",
   },
   light: {
-    bg: "#f4f9ef", surface: "#ffffff", surface2: "#eaf3e2",
-    border: "#c8dab8", borderHi: "#a8c890",
-    accent: "#4a8a1e", accentDim: "#6aa838",
-    amber: "#b87800", amberDim: "#e0a838",
-    text: "#1a2e10", textSub: "#4a6035", textMute: "#7a9460",
+    bg: "#f7f8f7", surface: "#ffffff", surface2: "#f0f2ef",
+    border: "#dde1db", borderHi: "#4f9d6e",
+    accent: "#3f7d54", accentDim: "#2c5c3c",
+    amber: "#96731c", amberDim: "#6b5313",
+    text: "#1c2024", textSub: "#5a6169", textMute: "#8b929b",
     danger: "#c0392b",
   },
 };

@@ -59,13 +59,13 @@ export default function LandingPage({ onEnter }) {
           onClick={(e) => { e.stopPropagation(); onEnter(); }}
           style={{
             marginTop: 8, padding: "13px 34px", borderRadius: 999,
-            border: "none", background: "#4a7a2e", color: "#fff",
+            border: "none", background: "#3f7d54", color: "#fff",
             fontSize: 15, fontWeight: 700, cursor: "pointer",
-            boxShadow: "0 6px 20px rgba(74,122,46,0.45)",
+            boxShadow: "0 6px 20px rgba(63,125,84,0.45)",
             transition: "transform 0.15s, box-shadow 0.15s",
           }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(74,122,46,0.55)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(74,122,46,0.45)"; }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(63,125,84,0.55)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(63,125,84,0.45)"; }}
         >
           Enter AgriBot →
         </button>
