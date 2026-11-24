@@ -1,5 +1,7 @@
 # AgriBot-Agentic RAG Pipeline for Agricultural Knowledge Base
 
+https://agribot-six-indol.vercel.app/
+
 An agentic Retrieval-Augmented Generation (RAG) system for answering natural-language questions over a mixed corpus of agricultural documents, including digitally generated and fully scanned PDFs. The system combines adaptive PDF extraction, hybrid retrieval, evidence evaluation, retry-based query refinement, web fallback, claim verification, and structured execution logging.
 
 ## Architecture
